@@ -1,0 +1,5 @@
+
+    func foo() {};
+    type S struct {};
+    func (s S) foo() {};
+        

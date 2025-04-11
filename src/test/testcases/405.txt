@@ -1,0 +1,6 @@
+
+    func foo() {
+        const c = 1;
+        const c = 2;
+    }
+        

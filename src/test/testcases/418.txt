@@ -1,0 +1,4 @@
+
+    var S int;
+    type S struct {};
+        
