@@ -1,7 +1,10 @@
 
     var i int;
-    for i := 0; i < 10; i += 1 {
-        var i int;
+    func main() {
+        for i := 0; i < 10; i += 1 {
+            var i int;
+        }
     }
+
     var i int;
         

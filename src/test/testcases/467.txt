@@ -1,0 +1,10 @@
+
+    type S struct {
+        f int;
+    };
+    func (s S) m() int { return 1; }
+    func main() {
+        var s S;
+        s.m();
+    }
+        

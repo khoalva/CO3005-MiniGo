@@ -1,0 +1,7 @@
+
+    func foo() {
+        for 1 {
+        continue
+    }
+    }
+        

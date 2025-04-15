@@ -1,0 +1,1 @@
+Type Mismatch: Assign(Id(s),StructLiteral(S2,[(y,IntLiteral(1))]))

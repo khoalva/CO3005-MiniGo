@@ -1,12 +1,4 @@
 
     var x int;
- 
-type TIEN struct {
-    Votien int;
-}
-
-func (v TIEN) getInt () {
-    const c = v.Votien;
-    var d = v.tien;
-}
+    var x int;
         

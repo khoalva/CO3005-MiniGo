@@ -1,0 +1,9 @@
+
+    type S struct {
+        x int;
+    };
+    func main() {
+        var s S;
+        s.y := 1;
+    }
+        

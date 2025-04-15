@@ -1,0 +1,1 @@
+Type Mismatch: StructLiteral(S,[(x,StringLiteral("string"))])

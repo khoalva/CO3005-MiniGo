@@ -1,0 +1,1 @@
+Type Mismatch: VarDecl(x,ArrayType(IntType,[IntLiteral(2)]),ArrayLiteral([IntLiteral(2)],StringType,[StringLiteral("a"),StringLiteral("b")]))

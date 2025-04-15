@@ -1,4 +1,8 @@
 
-    type S struct {};
-    type S interface {};
+    type S struct {
+        f int;
+    };
+    type S interface {
+        m();
+    };
         

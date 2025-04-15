@@ -1,0 +1,7 @@
+
+    func foo() {
+        for i, v := range "string" {
+            return
+        }
+    }
+        

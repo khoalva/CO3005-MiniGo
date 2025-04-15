@@ -1,5 +1,11 @@
 
-    func foo() {};
-    type S struct {};
-    func (s S) foo() {};
+    func foo() {
+        return
+        };
+    type S struct {
+        f int;
+    };
+    func (s S) foo() {
+        return
+        };
         

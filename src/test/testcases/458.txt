@@ -1,0 +1,5 @@
+
+    func foo() {
+        for i := "string"; i < 10; i += 1 {}
+    }
+        

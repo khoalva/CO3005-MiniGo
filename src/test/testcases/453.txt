@@ -1,0 +1,4 @@
+
+    type S struct { x int };
+    var s S = S{x: "string"};
+        

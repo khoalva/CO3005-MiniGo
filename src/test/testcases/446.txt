@@ -1,0 +1,9 @@
+
+    type I interface { m() };
+    type S struct {i int};
+    func (s S) m() {return;}
+    func foo() {
+        var i I;
+        i := S{};
+    }
+        

@@ -68,7 +68,6 @@ class StaticChecker(BaseVisitor,Utils):
         self.allow_cast = [(IntType, FloatType), (FloatType, IntType), (InterfaceType, StructType)]
 
     def check(self):
-
         return self.visit(self.ast,self.env)
     def _lookup_symbol(self, name: str, env: List[List[Symbol]]):
         """Tra cứu symbol trong môi trường scope."""

@@ -1,0 +1,6 @@
+
+    func foo() {
+        x := 1
+        x := "string";
+    }
+        

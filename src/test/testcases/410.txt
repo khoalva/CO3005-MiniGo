@@ -1,5 +1,11 @@
 
-    type S struct {};
-    func (s S) m() {};
-    func (s S) m() {};
+    type S struct {
+        f int;
+    };
+    func (s S) m() {
+        return
+    };
+    func (s S) m() {
+        return
+    };
         

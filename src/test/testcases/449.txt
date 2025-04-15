@@ -1,0 +1,8 @@
+
+    type S1 struct { x int };
+    type S2 struct { y int };
+    func foo() {
+        var s S1;
+        s := S2{y: 1};
+    }
+        

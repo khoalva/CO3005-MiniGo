@@ -1,4 +1,9 @@
 
-    type S struct {};
-    type S struct {};
+    type S struct {
+        f int;
+    };
+    type S struct {
+        x int;
+        y int;
+    };
         
