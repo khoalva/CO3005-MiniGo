@@ -107,6 +107,7 @@ class CodeGenerator(BaseVisitor,Utils):
         frame.exitScope()
         return o
     def visitVarDecl(self, ast, o):
+
         if 'frame' not in o: # global var
             o['env'][0].append(Symbol(ast.varName, ast.varType, CName(self.className)))
             self.emit.printout(self.emit.emitATTRIBUTE(ast.varName, ast.varType, True, False, str(ast.varInit.value) if ast.varInit else None))
@@ -116,8 +117,19 @@ class CodeGenerator(BaseVisitor,Utils):
             o['env'][0].append(Symbol(ast.varName, ast.varType, Index(index)))
             self.emit.printout(self.emit.emitVAR(index, ast.varName, ast.varType, frame.getStartLabel(), frame.getEndLabel(), frame))  
             if ast.varInit:
-                self.emit.printout(self.emit.emitPUSHICONST(ast.varInit.value, frame))
-                self.emit.printout(self.emit.emitWRITEVAR(ast.varName, ast.varType, index,  frame))
+                codegen = self.visit(ast.varInit, o)[0]
+                self.emit.printout(codegen)
+            else:
+                if type(ast.varType) is FloatType:
+                    self.emit.printout(self.emit.emitPUSHFCONST(0.0, frame))
+                elif type(ast.varType) is IntType:
+                    self.emit.printout(self.emit.emitPUSHICONST(0, frame))
+                elif type(ast.varType) is BoolType:
+                    self.emit.printout(self.emit.emitPUSHICONST(0, frame))
+                else:
+                    self.emit.printout(self.emit.emitPUSHNULL(frame))
+    
+            self.emit.printout(self.emit.emitWRITEVAR(ast.varName, ast.varType, index,  frame))
         return o
     
     def visitFuncCall(self, ast, o):
@@ -147,5 +159,34 @@ class CodeGenerator(BaseVisitor,Utils):
         
     def visitIntLiteral(self, ast, o):
         return self.emit.emitPUSHICONST(ast.value, o['frame']), IntType()
+    def visitFloatLiteral(self, ast, o):
+        return self.emit.emitPUSHFCONST(ast.value, o['frame']), FloatType()
+    def visitStringLiteral(self, ast, o):
+        return self.emit.emitPUSHCONST(ast.value, StringType, o['frame']), StringType()
+    def visitBooleanLiteral(self, ast, o):
+        return self.emit.emitPUSHICONST(ast.value, o['frame']), BoolType()
+    def visitArrayLiteral(self, ast, o):
+        codegen = ''
+        dimens = reduce(lambda acc, x: acc + [self.visit(x, o)[0]], ast.dimens, [])
+        if len(dimens) == 1:
+            codegen += dimens[0]
+            codegen += self.emit.emitNEWARRAY(ast.eleType, o['frame'])
+        else:
+            for i in range(len(dimens)-1):
+                codegen += self.emit.emitPUSHICONST(dimens[i], o['frame'])
+            codegen += self.emit.emitMULTIDIMARRAY(ast.eleType, dimens[-1], o['frame'])
+        return codegen, ast.eleType
+  
+    def visitArrayCell(self, ast, o):
+        self.visit(ast.arr, o)
+    def visitStructLiteral(self, ast, o):
+        pass
+    def visitBinaryOp(self, ast, o):
+        pass
+    def visitUnaryOp(self, ast, o):
+        pass
+
+
+
 
     

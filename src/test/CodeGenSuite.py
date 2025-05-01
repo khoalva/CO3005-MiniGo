@@ -28,4 +28,8 @@ class CheckCodeGenSuite(unittest.TestCase):
         input = Program([VarDecl("a",IntType(),IntLiteral(5000)),FuncDecl("main",[],VoidType(),Block([FuncCall("putInt", [Id("a")])]))])
         expect = "5000"
         self.assertTrue(TestCodeGen.test(input,expect,506))
+    def test_array_literal(self):
+        input = """func main() {var a [5]int = [5]int{1,2,3,4,5}; putInt(a[0]);};"""
+        expect = "1"
+        self.assertTrue(TestCodeGen.test(input,expect,507))
     

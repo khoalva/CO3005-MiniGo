@@ -1,6 +1,0 @@
-
-    type S struct {
-        f int;
-        f int;
-    };
-        

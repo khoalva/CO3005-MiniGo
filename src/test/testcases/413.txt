@@ -1,4 +1,0 @@
-
-    var x int;
-    const x = 1;
-        

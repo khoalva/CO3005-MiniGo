@@ -1,5 +1,0 @@
-
-    func foo(x int) {
-        var x int;
-    }
-        

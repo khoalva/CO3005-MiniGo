@@ -1,6 +1,0 @@
-
-    func foo() {
-        var x = "string";
-        x := 1;
-    }
-        

@@ -1,6 +1,0 @@
-
-    var i int;
-    var arr [2]int;
-    v := 1
-    for i, v := range arr {}
-        

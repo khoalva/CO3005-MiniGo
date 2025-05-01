@@ -1,8 +1,0 @@
-
-    type S struct {a int};
-    func (s S) m() { return ; }
-    func main() {
-        var s S;
-        var x int = s.m();
-    }
-        

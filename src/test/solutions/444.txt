@@ -1,1 +1,0 @@
-Type Mismatch: Assign(Id(x),ArrayLiteral([IntLiteral(2)],StringType,[StringLiteral("a"),StringLiteral("b")]))

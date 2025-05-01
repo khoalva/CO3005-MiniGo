@@ -1,7 +1,0 @@
-
-    func foo() {
-        for i, v := range arr {
-            var i int;
-        }
-    }
-        

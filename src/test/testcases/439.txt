@@ -1,5 +1,0 @@
-
-    func foo() {
-        var x [2]T;
-    }
-        

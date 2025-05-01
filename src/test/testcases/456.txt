@@ -1,7 +1,0 @@
-
-    func foo() {
-        if (1) {
-        return
-        }
-    }
-        

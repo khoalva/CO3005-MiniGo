@@ -3,7 +3,7 @@ from StaticCheck import *
 from StaticError import *
 import CodeGenerator as cgen
 from MachineCode import JasminCode
-
+from CodeGenError import *
 
 
 class Emitter():
@@ -83,14 +83,47 @@ class Emitter():
         
         if type(typ) is IntType:
             return self.emitPUSHICONST(in_, frame)
+        elif type(typ) is FloatType:
+            return self.emitPUSHFCONST(in_, frame)
+        elif type(typ) is cgen.ClassType:
+            frame.push()
+            return self.jvm.emitLDC(in_)
         elif type(typ) is StringType:
             frame.push()
             return self.jvm.emitLDC(in_)
+        elif type(typ) is cgen.ArrayType:
+            frame.push()
+            return self.jvm.emitLDC(in_)
+        elif type(typ) is BoolType:
+            return self.emitPUSHICONST(in_, frame)
         else:
             raise IllegalOperandException(in_)
-
+    
+    def emitPUSHNULL(self, frame):
+        #in_: String
+        #frame: Frame
+        
+        frame.push()
+        return self.jvm.emitPUSHNULL()
     ##############################################################
 
+    def emitNEWARRAY(self, in_, frame):
+        #in_: Type
+        #frame: Frame
+        
+        frame.push()
+        if type(in_) is IntType:
+            return self.jvm.emitNEWARRAY("int")
+        elif type(in_) is cgen.ClassType:
+            return self.jvm.emitNEWARRAY("java/lang/Object")
+        elif type(in_) is StringType:
+            return self.jvm.emitNEWARRAY("java/lang/String")
+        elif type(in_) is FloatType:
+            return self.jvm.emitNEWARRAY("float")
+        elif type(in_) is BoolType:
+            return self.jvm.emitNEWARRAY("boolean")
+        else:
+            raise IllegalOperandException(str(in_))
     def emitALOAD(self, in_, frame):
         #in_: Type
         #frame: Frame

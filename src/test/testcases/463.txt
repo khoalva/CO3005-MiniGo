@@ -1,6 +1,0 @@
-
-    func foo(x int, y int) {return}
-    func main() {
-        foo(1);
-    }
-        

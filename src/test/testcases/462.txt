@@ -1,6 +1,0 @@
-
-    func foo() {return}
-    func main() {
-        var x int = foo();
-    }
-        
