@@ -165,20 +165,70 @@ class CodeGenerator(BaseVisitor,Utils):
         return self.emit.emitPUSHCONST(ast.value, StringType, o['frame']), StringType()
     def visitBooleanLiteral(self, ast, o):
         return self.emit.emitPUSHICONST(ast.value, o['frame']), BoolType()
+    
+    def reduceNestedList(self, lst, arrTyp, eleTyp, o):
+        # lst: list of literals
+        # o: environment
+        # ..., arrayref -> arrayref
+        codegen = ''
+        if isinstance(lst[0], list):
+            for i in range(len(lst)):
+                codegen += self.emit.emitDUP(o['frame'])
+                codegen += self.reduceNestedList(lst[i], arrTyp, eleTyp, o)[0]
+                codegen += self.emit.emitASTORE(arrTyp, o['frame'])
+            return codegen, lst[0]
+        else:
+            return self.reduceList(lst, eleTyp, o)
+    def reduceList(self, lst, eleTyp, o):
+        # lst: list of literals
+        # o: environment
+        # ..., arrayref -> arrayref
+        codegen = ''
+        for i in range(len(lst)):
+            codegen += self.emit.emitDUP(o['frame'])
+            codegen += self.emit.emitPUSHICONST(i, o['frame'])
+            codegen += self.visit(lst[i], o)[0]
+            codegen += self.emit.emitASTORE(eleTyp, o['frame'])
+        return codegen, eleTyp
+
+
     def visitArrayLiteral(self, ast, o):
         codegen = ''
         dimens = reduce(lambda acc, x: acc + [self.visit(x, o)[0]], ast.dimens, [])
         if len(dimens) == 1:
             codegen += dimens[0]
             codegen += self.emit.emitNEWARRAY(ast.eleType, o['frame'])
+            codegen += self.reduceList(ast.value, ast.eleType, o)[0]
+            
         else:
-            for i in range(len(dimens)-1):
-                codegen += self.emit.emitPUSHICONST(dimens[i], o['frame'])
-            codegen += self.emit.emitMULTIDIMARRAY(ast.eleType, dimens[-1], o['frame'])
+            codegen += self.emit.emitPUSHICONST(len(ast.value), o['frame'])
+            codegen += self.emit.emitNEWARRAY(ArrayType(dimens=ast.dimens, eleType=ast.eleType), o['frame'])
+            codegen += self.reduceNestedList(ast.value, ArrayType(dimens=ast.dimens, eleType=ast.eleType), ast.eleType, o)[0]
         return codegen, ast.eleType
   
     def visitArrayCell(self, ast, o):
-        self.visit(ast.arr, o)
+        codegen, arrType = self.visit(ast.arr, o)
+        dimens = reduce(lambda acc, x: acc + [self.visit(x, o)[0]], arrType.dimens, [])
+        # Xác định kiểu trả về
+        remaining_dims = len(arrType.dimens) - len(ast.idx)
+        if remaining_dims == 0:
+            for i in range(len(dimens)-1):
+                codegen += dimens[i]
+                codegen += self.visit(ast.idx[i], o)[0]
+                codegen += self.emit.emitALOAD(ArrayType(arrType.dimens, arrType.eleType), o['frame'])
+            codegen += self.visit(ast.idx[-1], o)[0]
+            codegen += self.emit.emitALOAD(arrType.eleType, o['frame'])
+            # Truy cập đến phần tử cuối cùng
+            return codegen, arrType.eleType
+        else:
+            for i in range(len(dimens)):
+                codegen += dimens[i]
+                codegen += self.emit.emitALOAD(ArrayType(arrType.dimens, arrType.eleType), o['frame'])
+
+            # Trả về mảng với số chiều còn lại
+            new_dimens = arrType.dimens[len(ast.idx):]
+            return codegen, ArrayType(new_dimens, arrType.eleType)
+        
     def visitStructLiteral(self, ast, o):
         pass
     def visitBinaryOp(self, ast, o):

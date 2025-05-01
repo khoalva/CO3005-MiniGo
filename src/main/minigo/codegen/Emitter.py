@@ -122,6 +122,8 @@ class Emitter():
             return self.jvm.emitNEWARRAY("float")
         elif type(in_) is BoolType:
             return self.jvm.emitNEWARRAY("boolean")
+        elif type(in_) is cgen.ArrayType:
+            return self.jvm.emitANEWARRAY(self.getJVMType(in_))
         else:
             raise IllegalOperandException(str(in_))
     def emitALOAD(self, in_, frame):

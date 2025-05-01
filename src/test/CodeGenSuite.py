@@ -29,7 +29,11 @@ class CheckCodeGenSuite(unittest.TestCase):
         expect = "5000"
         self.assertTrue(TestCodeGen.test(input,expect,506))
     def test_array_literal(self):
-        input = """func main() {var a [5]int = [5]int{1,2,3,4,5}; putInt(a[0]);};"""
-        expect = "1"
+        input = """func main() {var a [2]int = [2]int{1,2}; putInt(a[1]);};"""
+        expect = "2"
         self.assertTrue(TestCodeGen.test(input,expect,507))
+    def test_array_literal_2(self):
+        input = """func main() {var a [2][2]int = [2][2]int{{1,2},{3,4}}; putInt(a[1][0]);};"""
+        expect = "3"
+        self.assertTrue(TestCodeGen.test(input,expect,508))
     
