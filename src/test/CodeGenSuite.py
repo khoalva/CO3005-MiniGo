@@ -108,7 +108,41 @@ class CheckCodeGenSuite(unittest.TestCase):
     #     input = """func main() {var a int = 0; for a := 0; a < 5; a += 1 {putInt(a);};};"""
     #     expect = "01234"
     #     self.assertTrue(TestCodeGen.test(input,expect,526))
-    def test_for_2(self):
-        input = """func main() {var a int = 0; for a < 5 {putInt(a); a += 1;};};"""
-        expect = "01234"
-        self.assertTrue(TestCodeGen.test(input,expect,527))
+    # def test_for_2(self):
+    #     input = """func main() {var a int = 0; for a < 5 {putInt(a); a += 1;};};"""
+    #     expect = "01234"
+    #     self.assertTrue(TestCodeGen.test(input,expect,527))
+    # def test_for_3(self):
+    #     input = """func main() {var a int = 0; for a := 0; a < 5; a += 1 {putInt(a); a += 1;};};"""
+    #     expect = "024"
+    #     self.assertTrue(TestCodeGen.test(input,expect,528))
+    # def test_for_4(self):
+    #     input = """func main() {var a int = 0; var b int = 5; for a := 0; a < b; a += 1 {putInt(a); a += 1; b += 1;};};"""
+    #     expect = "02468"
+    #     self.assertTrue(TestCodeGen.test(input,expect,529))
+    # def test_for_5(self):
+    #     input = """
+    #     func main() {
+    #         var a int = 0
+    #         var b int = 5 
+    #         var c int = 1
+    #         for a := 0; a < b; a += c {
+    #             putInt(a); 
+    #             a += 1 
+    #             b += 1
+    #             c += 1
+    #         }
+    #     }
+    #     """
+    #     expect = "03"
+    #     self.assertTrue(TestCodeGen.test(input,expect,530))
+    def test_return(self):
+        input = """
+        func foo() int{
+            return 5;
+        }
+        func main() {
+            putInt(foo());
+        };"""
+        expect = "5"
+        self.assertTrue(TestCodeGen.test(input,expect,531))

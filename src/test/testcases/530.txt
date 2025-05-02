@@ -1,0 +1,13 @@
+
+        func main() {
+            var a int = 0
+            var b int = 5 
+            var c int = 1
+            for a := 0; a < b; a += c {
+                putInt(a); 
+                a += 1 
+                b += 1
+                c += 1
+            }
+        }
+        

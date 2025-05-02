@@ -87,6 +87,7 @@ class CodeGenerator(BaseVisitor,Utils):
         env ={}
         env['env'] = [c]
         env['isLeft'] = False
+        env['stmt'] = True
         self.emit.printout(self.emit.emitPROLOG(self.className, "java.lang.Object"))
         env = reduce(lambda a,x: self.visit(x,a), ast.decl, env)
         self.emitObjectInit()
@@ -146,12 +147,26 @@ class CodeGenerator(BaseVisitor,Utils):
         return o
     
     def visitFuncCall(self, ast, o):
-        sym = next(filter(lambda x: x.name == ast.funName, o['env'][-1]),None)
-        env = o.copy()
-        env['isLeft'] = False
-        [self.emit.printout(self.visit(x, env)[0]) for x in ast.args]
-        self.emit.printout(self.emit.emitINVOKESTATIC(f"{sym.value.value}/{ast.funName}",sym.mtype, o['frame']))
-        return o
+        if o['stmt']:
+            sym = next(filter(lambda x: x.name == ast.funName, o['env'][-1]),None)
+            env = o.copy()
+            env['isLeft'] = False
+            o['stmt'] = False
+            [self.emit.printout(self.visit(x, env)[0]) for x in ast.args]
+            o['stmt'] = True
+            self.emit.printout(self.emit.emitINVOKESTATIC(f"{sym.value.value}/{ast.funName}",sym.mtype, o['frame']))
+            return o
+        else:
+            codegen = ''
+            sym = next(filter(lambda x: x.name == ast.funName, o['env'][0]),None)
+            env = o.copy()
+            env['isLeft'] = False
+            [self.emit.printout(self.visit(x, env)[0]) for x in ast.args]
+            if sym.value.isStatic:
+                codegen += self.emit.emitINVOKESTATIC(f"{sym.value.value}/{ast.funName}",sym.mtype, o['frame'])
+            else:
+                codegen += self.emit.emitINVOKEVIRTUAL(f"{sym.value.value}/{ast.funName}",sym.mtype, o['frame'])
+            return codegen, sym.mtype.retnType
     
     def visitBlock(self, ast, o):
         env = o.copy()
@@ -255,6 +270,7 @@ class CodeGenerator(BaseVisitor,Utils):
     def visitBinaryOp(self, ast, o):
         codegen = ''
         result = None
+
         if ast.op in ['+']:
             codeL, left = self.visit(ast.left, o)
             codeR, right = self.visit(ast.right, o)
@@ -417,7 +433,9 @@ class CodeGenerator(BaseVisitor,Utils):
         continueLabel = frame.getNewLabel()
         
         self.emit.printout(self.emit.emitLABEL(continueLabel, frame))
+        o['stmt'] = False
         condCode, _ = self.visit(ast.cond, o)
+        o['stmt'] = True
         self.emit.printout(condCode)
         self.emit.printout(self.emit.emitIFFALSE(breakLabel, frame))
         self.visit(ast.loop, o)
@@ -441,14 +459,21 @@ class CodeGenerator(BaseVisitor,Utils):
         self.visit(ast.init, o)
         
         forLabel = frame.getNewLabel()
-        code, _ = self.visit(ast.cond, o)
-        self.emit.printout(code)
         self.emit.printout(self.emit.emitLABEL(forLabel, frame))
-        
-
-
+        o['stmt'] = False
+        code, _ = self.visit(ast.cond, o)
+        o['stmt'] = True
+        self.emit.printout(code)
+        self.emit.printout(self.emit.emitIFFALSE(breakLabel, frame))
+        self.visit(ast.loop, o)
+        self.emit.printout(self.emit.emitLABEL(continueLabel, frame))
+        self.visit(ast.upda, o)
+        self.emit.printout(self.emit.emitGOTO(forLabel, frame))
+        self.emit.printout(self.emit.emitLABEL(breakLabel, frame))
 
         o['frame'].exitLoop()
+        return o
+    
     # def visitForEach(self, ast: ForEach, c: List[List[Symbol]]):
     #     """
     #     Kiểm tra vòng lặp for ... range trong MiniGo.
@@ -465,7 +490,9 @@ class CodeGenerator(BaseVisitor,Utils):
         o['isLeft'] = True
         codeL, typeLeft = self.visit(ast.lhs, o)
         o['isLeft'] = False
+        o['stmt'] = False
         codeR, typeRight = self.visit(ast.rhs, o)
+        o['stmt'] = True
         if type(ast.lhs) is Id:
             frame = o['frame']
             index = frame.getNewIndex()
@@ -475,6 +502,13 @@ class CodeGenerator(BaseVisitor,Utils):
             self.emit.printout(codeL)
             self.emit.printout(codeR)
             self.emit.emitASTORE(typeLeft, o['frame'])
+        return o
+    def visitReturn(self, ast, o):
+        o['stmt'] = False
+        code, typ = self.visit(ast.expr, o)
+        o['stmt'] = True
+        self.emit.printout(code)
+        self.emit.printout(self.emit.emitRETURN(typ, o['frame']))
         return o
         
         
