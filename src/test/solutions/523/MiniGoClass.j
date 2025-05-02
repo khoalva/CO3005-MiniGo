@@ -9,13 +9,8 @@ Label2:
 .var 1 is a Z from Label2 to Label3
 	iconst_1
 	istore_1
-.var 2 is b Z from Label2 to Label3
-	iconst_0
-	istore_2
 	iload_1
-	ifle Label4
-	iload_2
-	ifle Label4
+	ifgt Label4
 	iconst_1
 	goto Label5
 Label4:
@@ -25,8 +20,8 @@ Label5:
 Label3:
 Label1:
 	return
-.limit stack 2
-.limit locals 3
+.limit stack 4
+.limit locals 2
 .end method
 
 .method public <init>()V

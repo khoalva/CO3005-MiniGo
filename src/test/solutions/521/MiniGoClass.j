@@ -12,6 +12,9 @@ Label2:
 .var 2 is b Z from Label2 to Label3
 	iconst_0
 	istore_2
+.var 3 is c Z from Label2 to Label3
+	iconst_0
+	istore_3
 	iload_1
 	ifle Label4
 	iload_2
@@ -21,12 +24,20 @@ Label2:
 Label4:
 	iconst_0
 Label5:
+	ifle Label6
+	iload_3
+	ifle Label6
+	iconst_1
+	goto Label7
+Label6:
+	iconst_0
+Label7:
 	invokestatic io/putBool(Z)V
 Label3:
 Label1:
 	return
-.limit stack 2
-.limit locals 3
+.limit stack 3
+.limit locals 4
 .end method
 
 .method public <init>()V

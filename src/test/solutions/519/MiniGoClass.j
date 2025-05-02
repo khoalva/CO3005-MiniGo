@@ -13,13 +13,13 @@ Label2:
 	iconst_0
 	istore_2
 	iload_1
-	ifle Label4
+	ifgt Label4
 	iload_2
-	ifle Label4
-	iconst_1
+	ifgt Label4
+	iconst_0
 	goto Label5
 Label4:
-	iconst_0
+	iconst_1
 Label5:
 	invokestatic io/putBool(Z)V
 Label3:
