@@ -8,6 +8,10 @@ Label0:
 Label2:
 .var 1 is a [I from Label2 to Label3
 	iconst_2
+	anewarray [I
+	dup
+	iconst_0
+	iconst_2
 	newarray int
 	dup
 	iconst_0
@@ -17,15 +21,29 @@ Label2:
 	iconst_1
 	iconst_2
 	iastore
+	aastore
+	dup
+	iconst_1
+	iconst_2
+	newarray int
+	dup
+	iconst_0
+	iconst_3
+	iastore
+	dup
+	iconst_1
+	iconst_4
+	iastore
+	aastore
 	astore_1
 	aload_1
-	iconst_1
-	iaload
+	iconst_0
+	aaload
 	invokestatic io/putInt(I)V
 Label3:
 Label1:
 	return
-.limit stack 7
+.limit stack 14
 .limit locals 2
 .end method
 

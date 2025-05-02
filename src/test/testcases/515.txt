@@ -1,0 +1,1 @@
+func main() {var a int = 5; var b float = 10.0; putFloat(a + b);};

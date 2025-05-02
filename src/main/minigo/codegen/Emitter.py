@@ -20,6 +20,10 @@ class Emitter():
             return "Ljava/lang/String;"
         elif typeIn is VoidType:
             return "V"
+        elif typeIn is FloatType:
+            return "F"
+        elif typeIn is BoolType:
+            return "Z"
         elif typeIn is ArrayType:
             return "[" + self.getJVMType(inType.eleType)
         elif typeIn is MType:
@@ -181,6 +185,10 @@ class Emitter():
         frame.push()
         if type(inType) is IntType:
             return self.jvm.emitILOAD(index)
+        elif type(inType) is FloatType:
+            return self.jvm.emitFLOAD(index)
+        elif type(inType) is BoolType:
+            return self.jvm.emitILOAD(index)
         elif type(inType) is cgen.ArrayType or type(inType) is cgen.ClassType or type(inType) is StringType:
             return self.jvm.emitALOAD(index)
         else:
@@ -212,6 +220,10 @@ class Emitter():
         frame.pop()
 
         if type(inType) is IntType:
+            return self.jvm.emitISTORE(index)
+        elif type(inType) is FloatType:
+            return self.jvm.emitFSTORE(index)
+        elif type(inType) is BoolType:
             return self.jvm.emitISTORE(index)
         elif type(inType) is cgen.ArrayType or type(inType) is cgen.ClassType or type(inType) is StringType:
             return self.jvm.emitASTORE(index)
@@ -447,18 +459,38 @@ class Emitter():
 
         frame.pop()
         frame.pop()
-        if op == ">":
-            result.append(self.jvm.emitIFICMPLE(labelF))
-        elif op == ">=":
-            result.append(self.jvm.emitIFICMPLT(labelF))
-        elif op == "<":
-            result.append(self.jvm.emitIFICMPGE(labelF))
-        elif op == "<=":
-            result.append(self.jvm.emitIFICMPGT(labelF))
-        elif op == "!=":
-            result.append(self.jvm.emitIFICMPEQ(labelF))
-        elif op == "==":
-            result.append(self.jvm.emitIFICMPNE(labelF))
+        if type(in_) is IntType:
+            if op == ">":
+                result.append(self.jvm.emitIFICMPLE(labelF))
+            elif op == ">=":
+                result.append(self.jvm.emitIFICMPLT(labelF))
+            elif op == "<":
+                result.append(self.jvm.emitIFICMPGE(labelF))
+            elif op == "<=":
+                result.append(self.jvm.emitIFICMPGT(labelF))
+            elif op == "!=":
+                result.append(self.jvm.emitIFICMPEQ(labelF))
+            elif op == "==":
+                result.append(self.jvm.emitIFICMPNE(labelF))
+        elif type(in_) is FloatType:
+            if op == ">":
+                result.append(self.jvm.emitFCMPL())  # So sánh float
+                result.append(self.jvm.emitIFLE(labelF))  # Nhảy nếu value1 <= value2
+            elif op == ">=":
+                result.append(self.jvm.emitFCMPL())
+                result.append(self.jvm.emitIFLT(labelF))  # Nhảy nếu value1 < value2
+            elif op == "<":
+                result.append(self.jvm.emitFCMPL())
+                result.append(self.jvm.emitIFGE(labelF))  # Nhảy nếu value1 >= value2
+            elif op == "<=":
+                result.append(self.jvm.emitFCMPL())
+                result.append(self.jvm.emitIFGT(labelF))  # Nhảy nếu value1 > value2
+            elif op == "!=":
+                result.append(self.jvm.emitFCMPL())
+                result.append(self.jvm.emitIFEQ(labelF))  # Nhảy nếu value1 == value2
+            elif op == "==":
+                result.append(self.jvm.emitFCMPL())
+                result.append(self.jvm.emitIFNE(labelF))  # Nhảy nếu value1 != value2
         result.append(self.emitPUSHCONST("1", IntType(), frame))
         frame.pop()
         result.append(self.emitGOTO(labelO, frame))

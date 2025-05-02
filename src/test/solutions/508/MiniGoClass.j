@@ -10,6 +10,9 @@ Label2:
 	iconst_2
 	anewarray [I
 	dup
+	iconst_0
+	iconst_2
+	newarray int
 	dup
 	iconst_0
 	iconst_1
@@ -20,6 +23,9 @@ Label2:
 	iastore
 	aastore
 	dup
+	iconst_1
+	iconst_2
+	newarray int
 	dup
 	iconst_0
 	iconst_3
@@ -31,7 +37,6 @@ Label2:
 	aastore
 	astore_1
 	aload_1
-	iconst_2
 	iconst_1
 	aaload
 	iconst_0
@@ -40,7 +45,7 @@ Label2:
 Label3:
 Label1:
 	return
-.limit stack 13
+.limit stack 14
 .limit locals 2
 .end method
 

@@ -6,27 +6,21 @@
 Label0:
 .var 0 is args [Ljava/lang/String; from Label0 to Label1
 Label2:
-.var 1 is a [I from Label2 to Label3
-	iconst_2
-	newarray int
-	dup
-	iconst_0
-	iconst_1
-	iastore
-	dup
-	iconst_1
-	iconst_2
-	iastore
+.var 1 is a Ljava/lang/String; from Label2 to Label3
+	ldc "Hello "
 	astore_1
+.var 2 is b Ljava/lang/String; from Label2 to Label3
+	ldc "World!"
+	astore_2
 	aload_1
-	iconst_1
-	iaload
-	invokestatic io/putInt(I)V
+	aload_2
+	invokevirtual java.lang.String/concat(Ljava/lang/String;)Ljava/lang/String;
+	invokestatic io/putString(Ljava/lang/String;)V
 Label3:
 Label1:
 	return
-.limit stack 7
-.limit locals 2
+.limit stack 2
+.limit locals 3
 .end method
 
 .method public <init>()V

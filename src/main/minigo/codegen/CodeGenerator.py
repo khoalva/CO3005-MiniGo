@@ -44,7 +44,18 @@ class CodeGenerator(BaseVisitor,Utils):
 
     def init(self):
         mem = [Symbol("putInt",MType([IntType()],VoidType()),CName("io",True)),
-                Symbol("putIntLn",MType([IntType()],VoidType()),CName("io",True))]
+                Symbol("putIntLn",MType([IntType()],VoidType()),CName("io",True)),
+                Symbol("putFloat",MType([FloatType()],VoidType()),CName("io",True)),
+                Symbol("putFloatLn",MType([FloatType()],VoidType()),CName("io",True)),
+                Symbol("putBool",MType([BoolType()],VoidType()),CName("io",True)),
+                Symbol("putBoolLn",MType([BoolType()],VoidType()),CName("io",True)),
+                Symbol("putString",MType([StringType()],VoidType()),CName("io",True)),
+                Symbol("putStringLn",MType([StringType()],VoidType()),CName("io",True)),
+                Symbol("putLn",MType([],VoidType()),CName("io",True)),
+                Symbol("getInt",MType([],IntType()),CName("io",True)),
+                Symbol("getFloat",MType([],FloatType()),CName("io",True)),
+                Symbol("getBool",MType([],BoolType()),CName("io",True)),
+                Symbol("getString",MType([],StringType()),CName("io",True)),]
         return mem
 
     def gen(self, ast, dir_):
@@ -160,9 +171,9 @@ class CodeGenerator(BaseVisitor,Utils):
     def visitIntLiteral(self, ast, o):
         return self.emit.emitPUSHICONST(ast.value, o['frame']), IntType()
     def visitFloatLiteral(self, ast, o):
-        return self.emit.emitPUSHFCONST(ast.value, o['frame']), FloatType()
+        return self.emit.emitPUSHFCONST(str(ast.value), o['frame']), FloatType()
     def visitStringLiteral(self, ast, o):
-        return self.emit.emitPUSHCONST(ast.value, StringType, o['frame']), StringType()
+        return self.emit.emitPUSHCONST(ast.value, StringType(), o['frame']), StringType()
     def visitBooleanLiteral(self, ast, o):
         return self.emit.emitPUSHICONST(ast.value, o['frame']), BoolType()
     
@@ -172,8 +183,11 @@ class CodeGenerator(BaseVisitor,Utils):
         # ..., arrayref -> arrayref
         codegen = ''
         if isinstance(lst[0], list):
+            codegen += self.emit.emitPUSHICONST(len(lst), o['frame'])
+            codegen += self.emit.emitNEWARRAY(arrTyp, o['frame'])
             for i in range(len(lst)):
                 codegen += self.emit.emitDUP(o['frame'])
+                codegen += self.emit.emitPUSHICONST(i, o['frame'])
                 codegen += self.reduceNestedList(lst[i], arrTyp, eleTyp, o)[0]
                 codegen += self.emit.emitASTORE(arrTyp, o['frame'])
             return codegen, lst[0]
@@ -184,6 +198,8 @@ class CodeGenerator(BaseVisitor,Utils):
         # o: environment
         # ..., arrayref -> arrayref
         codegen = ''
+        codegen += self.emit.emitPUSHICONST(len(lst), o['frame'])
+        codegen += self.emit.emitNEWARRAY(eleTyp, o['frame'])
         for i in range(len(lst)):
             codegen += self.emit.emitDUP(o['frame'])
             codegen += self.emit.emitPUSHICONST(i, o['frame'])
@@ -194,26 +210,20 @@ class CodeGenerator(BaseVisitor,Utils):
 
     def visitArrayLiteral(self, ast, o):
         codegen = ''
-        dimens = reduce(lambda acc, x: acc + [self.visit(x, o)[0]], ast.dimens, [])
-        if len(dimens) == 1:
-            codegen += dimens[0]
-            codegen += self.emit.emitNEWARRAY(ast.eleType, o['frame'])
+        
+        if len(ast.dimens) == 1:
             codegen += self.reduceList(ast.value, ast.eleType, o)[0]
-            
         else:
-            codegen += self.emit.emitPUSHICONST(len(ast.value), o['frame'])
-            codegen += self.emit.emitNEWARRAY(ArrayType(dimens=ast.dimens, eleType=ast.eleType), o['frame'])
             codegen += self.reduceNestedList(ast.value, ArrayType(dimens=ast.dimens, eleType=ast.eleType), ast.eleType, o)[0]
         return codegen, ast.eleType
   
     def visitArrayCell(self, ast, o):
         codegen, arrType = self.visit(ast.arr, o)
-        dimens = reduce(lambda acc, x: acc + [self.visit(x, o)[0]], arrType.dimens, [])
+
         # Xác định kiểu trả về
         remaining_dims = len(arrType.dimens) - len(ast.idx)
         if remaining_dims == 0:
-            for i in range(len(dimens)-1):
-                codegen += dimens[i]
+            for i in range(len(arrType.dimens)-1):
                 codegen += self.visit(ast.idx[i], o)[0]
                 codegen += self.emit.emitALOAD(ArrayType(arrType.dimens, arrType.eleType), o['frame'])
             codegen += self.visit(ast.idx[-1], o)[0]
@@ -221,8 +231,8 @@ class CodeGenerator(BaseVisitor,Utils):
             # Truy cập đến phần tử cuối cùng
             return codegen, arrType.eleType
         else:
-            for i in range(len(dimens)):
-                codegen += dimens[i]
+            for i in range(len(arrType.dimens) - remaining_dims):
+                codegen += self.visit(ast.idx[i], o)[0]
                 codegen += self.emit.emitALOAD(ArrayType(arrType.dimens, arrType.eleType), o['frame'])
 
             # Trả về mảng với số chiều còn lại
@@ -232,9 +242,141 @@ class CodeGenerator(BaseVisitor,Utils):
     def visitStructLiteral(self, ast, o):
         pass
     def visitBinaryOp(self, ast, o):
-        pass
+        codegen = ''
+        codeL, left = self.visit(ast.left, o)
+        codeR, right = self.visit(ast.right, o)
+
+        result = None
+        if ast.op in ['+']:
+            if type(left) is StringType and type(right) is StringType:
+                codegen += codeL
+                codegen += codeR
+                result = StringType()
+                codegen += self.emit.emitINVOKEVIRTUAL("java.lang.String/concat", MType([StringType()], StringType()), o['frame'])
+            elif type(left) is IntType and type(right) is IntType:
+                codegen += codeL
+                codegen += codeR
+                result = IntType()
+                codegen += self.emit.emitADDOP('+',IntType(),o['frame'])
+            elif type(left) is FloatType and type(right) is FloatType:
+                codegen += codeL
+                codegen += codeR
+                result = FloatType()
+                codegen += self.emit.emitADDOP('+',FloatType(),o['frame'])
+            elif type(left) is IntType and type(right) is FloatType:
+                codegen += codeL
+                codegen += self.emit.emitI2F(o['frame'])
+                codegen += codeR
+                result = FloatType()
+                codegen += self.emit.emitADDOP('+',FloatType(),o['frame'])
+            elif type(left) is FloatType and type(right) is IntType:
+                result = FloatType()
+                codegen += codeL
+                codegen += codeR
+                codegen += self.emit.emitI2F(o['frame'])
+                codegen += self.emit.emitADDOP('+',FloatType(),o['frame'])
+
+        elif ast.op in ['-','*','/']:
+            if type(left) is IntType and type(right) is IntType:
+                result = IntType()
+                codegen += codeL
+                codegen += codeR
+                codegen += self.emit.emitADDOP('-',result,o['frame']) if ast.op == '-' else self.emit.emitMULOP('*',result,o['frame']) if ast.op == '*' else self.emit.emitMULOP('/',result,o['frame'])
+
+            elif type(left) is FloatType and type(right) is FloatType:
+                result = FloatType()
+                codegen += codeL
+                codegen += codeR
+                codegen += self.emit.emitADDOP('-',result,o['frame']) if ast.op == '-' else self.emit.emitMULOP('*',result,o['frame']) if ast.op == '*' else self.emit.emitMULOP('/',result,o['frame'])
+            elif type(left) is IntType and type(right) is FloatType:
+                result = FloatType()
+                codegen += codeL
+                codegen += self.emit.emitI2F(o['frame'])
+                codegen += codeR
+                codegen += self.emit.emitADDOP('-',result,o['frame']) if ast.op == '-' else self.emit.emitMULOP('*',result,o['frame']) if ast.op == '*' else self.emit.emitMULOP('/',result,o['frame'])
+            elif type(left) is FloatType and type(right) is IntType:
+                result = FloatType()
+                codegen += codeL
+                codegen += codeR
+                codegen += self.emit.emitI2F(o['frame'])
+                codegen += self.emit.emitADDOP('-',result,o['frame']) if ast.op == '-' else self.emit.emitMULOP('*',result,o['frame']) if ast.op == '*' else self.emit.emitMULOP('/',result,o['frame'])
+
+        elif ast.op in ['%']:
+            if type(left) is IntType and type(right) is IntType:
+                codegen += codeL
+                codegen += codeR
+                result = IntType()
+                codegen += self.emit.emitMOD(o['frame'])
+        elif ast.op in ['<','<=','>','>=','==','!=']:
+            result = BoolType()
+            if type(left) is IntType and type(right) is IntType:
+                codegen += codeL
+                codegen += codeR
+                codegen += self.emit.emitREOP(ast.op, IntType(), o['frame'])
+            elif type(left) is FloatType and type(right) is FloatType:
+                codegen += codeL
+                codegen += codeR
+                codegen += self.emit.emitREOP(ast.op, FloatType(), o['frame'])
+            elif type(left) is IntType and type(right) is FloatType:
+                codegen += codeL
+                codegen += self.emit.emitI2F(o['frame'])
+                codegen += codeR
+                codegen += self.emit.emitREOP(ast.op, FloatType(), o['frame'])
+            elif type(left) is FloatType and type(right) is IntType:
+                codegen += codeL
+                codegen += codeR
+                codegen += self.emit.emitI2F(o['frame'])
+                codegen += self.emit.emitREOP(ast.op, FloatType(), o['frame'])
+            elif type(left) is StringType and type(right) is StringType:
+                codegen += codeL
+                codegen += codeR
+                codegen += self.emit.emitREOP(ast.op, FloatType(), o['frame'])
+            elif type(left) is BoolType and type(right) is BoolType:
+                codegen += codeL
+                codegen += codeR
+                codegen += self.emit.emitREOP(ast.op, FloatType(), o['frame'])
+        elif ast.op in ['&&','||']:
+            codegen += codeL
+            codegen += codeR
+            result = BoolType()
+            if ast.op == '&&':
+                label1 = o['frame'].getNewLabel()
+                label2 = o['frame'].getNewLabel()
+                codegen += self.emit.emitIFFALSE(label1, o['frame'])
+                codegen += self.visit(ast.right, o)[0]
+                codegen += self.emit.emitIFFALSE(label1, o['frame'])
+                codegen += self.emit.emitPUSHICONST(1, o['frame'])
+                codegen += self.emit.emitGOTO(label2, o['frame'])
+                codegen += self.emit.emitLABEL(label1, o['frame'])
+                codegen += self.emit.emitPUSHICONST(0, o['frame'])
+                codegen += self.emit.emitLABEL(label2, o['frame'])
+            elif ast.op == '||':
+                label1 = o['frame'].getNewLabel()
+                label2 = o['frame'].getNewLabel()
+                codegen += self.emit.emitIFTRUE(label1, o['frame'])
+                codegen += self.visit(ast.right, o)[0]
+                codegen += self.emit.emitIFTRUE(label1, o['frame'])
+                codegen += self.emit.emitPUSHICONST(0, o['frame'])
+                codegen += self.emit.emitGOTO(label2, o['frame'])
+                codegen += self.emit.emitLABEL(label1, o['frame'])
+                codegen += self.emit.emitPUSHICONST(1, o['frame'])
+                codegen += self.emit.emitLABEL(label2, o['frame'])
+
+        return codegen, result
     def visitUnaryOp(self, ast, o):
-        pass
+        codegen, body = self.visit(ast.body, o)
+        
+        if ast.op in ['-']:
+            codegen += self.emit.emitINEG(o['frame']) if type(body) is IntType else self.emit.emitFNEG(o['frame'])
+            return codegen, body
+        elif ast.op in ['!']:
+            codegen += self.emit.emitIFNE(ast.label, o['frame'])
+            codegen += self.emit.emitPUSHICONST(1, o['frame'])
+            codegen += self.emit.emitGOTO(ast.label, o['frame'])
+            codegen += self.emit.emitLABEL(ast.label, o['frame'])
+            codegen += self.emit.emitPUSHICONST(0, o['frame'])
+            return codegen, BoolType()
+            
 
 
 
