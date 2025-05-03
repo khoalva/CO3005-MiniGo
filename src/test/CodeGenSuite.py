@@ -289,3 +289,54 @@ class CheckCodeGenSuite(unittest.TestCase):
     #     };"""
     #     expect = "20"
     #     self.assertTrue(TestCodeGen.test(input,expect,541))
+    # def test_var_decl_2(self):
+    #     input = """
+    #     var a = 5 + 5;
+    #     var b float = 10;
+    #     func main() {
+    #         putFloat(a + b);
+    #     };"""
+    #     expect = "20.0"
+    #     self.assertTrue(TestCodeGen.test(input,expect,542))
+    # def test_struct_decl(self):
+    #     input = """
+    #     type Test struct {
+    #         x int
+    #         y int
+    #     }
+
+    #     func main() {
+    #         putInt(1)
+    #     }
+    #     """
+    #     expect = "1"
+    #     self.assertTrue(TestCodeGen.test(input,expect,543))
+    # def test_struct_decl_2(self):
+    #     input = """
+    #     type Test struct {
+    #         x int
+    #         y int
+    #     }
+
+    #     func main() {
+    #         var a Test
+    #         putInt(1)
+    #     }
+    #     """
+    #     expect = "1"
+    #     self.assertTrue(TestCodeGen.test(input,expect,544))
+    def test_field_access(self):
+        input = """
+        type Test struct {
+            x int
+            y int
+        }
+
+        func main() {
+            var a Test
+            a.x := 5
+            putInt(a.x)
+        }
+        """
+        expect = "5"
+        self.assertTrue(TestCodeGen.test(input,expect,545))

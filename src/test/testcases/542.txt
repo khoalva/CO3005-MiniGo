@@ -1,0 +1,6 @@
+
+        var a = 5 + 5;
+        var b float = 10;
+        func main() {
+            putFloat(a + b);
+        };

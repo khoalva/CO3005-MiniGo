@@ -7,6 +7,7 @@ Label0:
 .var 0 is args [Ljava/lang/String; from Label0 to Label1
 Label2:
 .var 1 is a I from Label2 to Label3
+.var 1 is a I from Label2 to Label3
 	iconst_0
 	istore_1
 	iconst_0
@@ -48,8 +49,8 @@ Label5:
 Label3:
 Label1:
 	return
-.limit stack 10
-.limit locals 4
+.limit stack 11
+.limit locals 2
 .end method
 
 .method public <init>()V

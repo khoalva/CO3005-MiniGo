@@ -34,6 +34,7 @@ Label0:
 .var 0 is args [Ljava/lang/String; from Label0 to Label1
 Label2:
 .var 1 is a I from Label2 to Label3
+.var 1 is a I from Label2 to Label3
 	invokestatic MiniGoClass/foo2()I
 	istore_1
 	iload_1
@@ -54,4 +55,12 @@ Label1:
 	return
 .limit stack 1
 .limit locals 1
+.end method
+
+.method public static <clinit>()V
+Label0:
+Label1:
+	return
+.limit stack 0
+.limit locals 0
 .end method

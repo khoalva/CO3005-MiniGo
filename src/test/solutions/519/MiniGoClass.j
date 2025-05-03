@@ -7,8 +7,10 @@ Label0:
 .var 0 is args [Ljava/lang/String; from Label0 to Label1
 Label2:
 .var 1 is a Z from Label2 to Label3
+.var 1 is a Z from Label2 to Label3
 	iconst_1
 	istore_1
+.var 2 is b Z from Label2 to Label3
 .var 2 is b Z from Label2 to Label3
 	iconst_0
 	istore_2
@@ -38,4 +40,12 @@ Label1:
 	return
 .limit stack 1
 .limit locals 1
+.end method
+
+.method public static <clinit>()V
+Label0:
+Label1:
+	return
+.limit stack 0
+.limit locals 0
 .end method

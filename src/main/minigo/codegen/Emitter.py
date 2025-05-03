@@ -255,7 +255,7 @@ class Emitter():
         if isStatic:
             return self.jvm.emitSTATICFIELD(lexeme, self.getJVMType(in_), isFinal, value)
         else:
-            return self.jvm.emitFIELD(lexeme, self.getJVMType(in_), isFinal, value)
+            return self.jvm.emitINSTANCEFIELD(lexeme, self.getJVMType(in_), isFinal, value)
 
     def emitGETSTATIC(self, lexeme, in_, frame):
         #lexeme: String

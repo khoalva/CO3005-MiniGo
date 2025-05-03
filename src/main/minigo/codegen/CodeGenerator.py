@@ -99,20 +99,23 @@ class CodeGenerator(BaseVisitor,Utils):
             if isinstance(decl, VarDecl):
                 env['isLeft'] = False
                 env['stmt'] = False
-                code = self.visit(decl.varInit, env)[0]
+                code, exprType = self.visit(decl.varInit, env)
                 env['isLeft'] = False
                 env['stmt'] = True
                 self.emit.printout(code)
+                if type(decl.varType) is FloatType and type(exprType) is IntType:
+                    self.emit.printout(self.emit.emitI2F(frame))
+                
                 self.emit.printout(self.emit.emitPUTSTATIC(f"{self.className}/{decl.varName}", decl.varType, frame))
                 
             elif isinstance(decl, ConstDecl):
                 env['isLeft'] = False
                 env['stmt'] = False
-                code = self.visit(decl.iniExpr, env)[0]
+                code, conType = self.visit(decl.iniExpr, env)
                 env['isLeft'] = False
                 env['stmt'] = True
                 self.emit.printout(code)
-                self.emit.printout(self.emit.emitPUTSTATIC(f"{self.className}/{decl.conName}", decl.conType, frame))
+                self.emit.printout(self.emit.emitPUTSTATIC(f"{self.className}/{decl.conName}", conType, frame))
         
         self.emit.printout(self.emit.emitLABEL(frame.getEndLabel(), frame))
         self.emit.printout(self.emit.emitRETURN(VoidType(), frame))  
@@ -130,7 +133,18 @@ class CodeGenerator(BaseVisitor,Utils):
         self.emitObjectCInit(ast, env)
         self.emit.printout(self.emit.emitEPILOG())
         return env
-
+    def declareVar(self, name, _type, o):
+        """
+        Khai báo biến trong môi trường hiện tại.
+        name: Tên biến
+        _type: Kiểu biến
+        o: Môi trường (list of scopes)
+        """
+        frame = o['frame']
+        index = frame.getNewIndex()
+        o['env'][0].append(Symbol(name, _type, Index(index)))
+        self.emit.printout(self.emit.emitVAR(index, name, _type, frame.getStartLabel(), frame.getEndLabel(), frame))
+        return o, index
 
     def visitFuncDecl(self, ast, o):
         frame = Frame(ast.name, ast.retType)
@@ -167,18 +181,24 @@ class CodeGenerator(BaseVisitor,Utils):
     def visitVarDecl(self, ast, o):
 
         if 'frame' not in o: # global var
+            temp_frame = Frame("temp", VoidType())
+            env = o.copy()
+            env['frame'] = temp_frame
+            _, varType = self.visit(ast.varInit, env)
+            if ast.varType is None:
+                ast.varType = varType
             o['env'][0].append(Symbol(ast.varName, ast.varType, CName(self.className)))
-            self.emit.printout(self.emit.emitATTRIBUTE(ast.varName, ast.varType, True, False, None))
+            self.emit.printout(self.emit.emitATTRIBUTE(ast.varName, ast.varType, True, True, None))
         else:
             frame = o['frame']
-            index = frame.getNewIndex()
-            o['env'][0].append(Symbol(ast.varName, ast.varType, Index(index)))
-            self.emit.printout(self.emit.emitVAR(index, ast.varName, ast.varType, frame.getStartLabel(), frame.getEndLabel(), frame))  
+            varType = ast.varType
             if ast.varInit:
                 o['stmt'] = False
-                codegen = self.visit(ast.varInit, o)[0]
+                codegen, _type = self.visit(ast.varInit, o)
                 o['stmt'] = True
                 self.emit.printout(codegen)
+                if varType is None:
+                    varType = _type
             else:
                 if type(ast.varType) is FloatType:
                     self.emit.printout(self.emit.emitPUSHFCONST(0.0, frame))
@@ -188,15 +208,21 @@ class CodeGenerator(BaseVisitor,Utils):
                     self.emit.printout(self.emit.emitPUSHICONST(0, frame))
                 else:
                     self.emit.printout(self.emit.emitPUSHNULL(frame))
-    
-            self.emit.printout(self.emit.emitWRITEVAR(ast.varName, ast.varType, index,  frame))
+            if type(varType) is Id:
+                varType = ClassType(varType.name)
+            o, index = self.declareVar(ast.varName, varType, o)
+            self.emit.printout(self.emit.emitWRITEVAR(ast.varName, varType, index,  frame))
         return o
     
     def visitConstDecl(self, ast, o):
 
         if 'frame' not in o:
-            o['env'][0].append(Symbol(ast.conName, ast.conType, CName(self.className)))
-            self.emit.printout(self.emit.emitATTRIBUTE(ast.conName, ast.conType, True, True, None))
+            temp_frame = Frame("temp", VoidType())
+            env = o.copy()
+            env['frame'] = temp_frame
+            _, conType = self.visit(ast.iniExpr, env)
+            o['env'][0].append(Symbol(ast.conName, conType, CName(self.className)))
+            self.emit.printout(self.emit.emitATTRIBUTE(ast.conName, conType, True, True, None))
         else:
             frame = o['frame']
             index = frame.getNewIndex()
@@ -558,13 +584,19 @@ class CodeGenerator(BaseVisitor,Utils):
         if type(ast.lhs) is Id:
             sym = next(filter(lambda x: x.name == ast.lhs.name, [j for i in o['env'] for j in i]),None)
             if sym is None:
-                frame = o['frame']
-                index = frame.getNewIndex()
-                o['env'][0].append(Symbol(ast.lhs.name, typeRight, Index(index)))
+                o, index = self.declareVar(ast.lhs.name, ast.lhs.mtype, o)
+                
             o['isLeft'] = True
             codeL, typeLeft = self.visit(ast.lhs, o)
             o['isLeft'] = False
             self.emit.printout(codeR + codeL)
+        elif type(ast.lhs) is FieldAccess:
+            o['isLeft'] = True
+            codeL, typeLeft = self.visit(ast.lhs, o)
+            o['isLeft'] = False
+            self.emit.printout(codeL)
+            self.emit.printout(codeR)
+            self.emit.printout(self.emit.emitPUTFIELD(f"{typeLeft.receiver.name}/{ast.lhs.field}",ast.mtype,o['frame']))
         else:
             o['isLeft'] = True
             codeL, typeLeft = self.visit(ast.lhs, o)
@@ -589,7 +621,47 @@ class CodeGenerator(BaseVisitor,Utils):
         return o
     
     def visitStructType(self, ast, o):
-        return ast, ast.name
+        emit = Emitter(self.path + "/" + ast.name + ".j")
+
+        emit.printout(self.emit.emitPROLOG(ast.name, "java.lang.Object"))
+        
+        for x in ast.elements:
+            emit.printout(self.emit.emitATTRIBUTE(x[0],x[1],False,False, None))
+        temp = self.className
+        self.className = ast.name
+        # self.emitObjectInit()
+        self.className = temp
+        # self.emitObjectCInit(ast, o)
+        emit.emitEPILOG()
+        o['env'][0].append(Symbol(ast.name, ClassType(ast.name), None))
+        return o
+    
+    def visitFieldAccess(self, ast, o):
+        if o['isLeft']:
+            codegen = ''
+            if type(ast.receiver) is Id:
+                # sym = next(filter(lambda x: x.name == ast.receiver.name, [j for i in o['env'] for j in i]),None)
+                # self.emit.printout(self.emit.emitREADVAR(ast.receiver.name, sym.mtype, sym.value.value, o['frame']))
+                # self.emit.printout(self.emit.emitGETFIELD(f"{sym.value.value}/{ast.field}",ast.mtype,o['frame']))
+                return self.emit.emitPUTFIELD(f"{ast.receiver.name}/{ast.field}",ast.mtype,o['frame'])
+            else:
+                self.emit.printout(self.visit(ast.receiver, o)[0])
+                
+            return codegen, ast.mtype
+        else:
+            codegen = ''
+            if type(ast.receiver) is Id:
+                sym = next(filter(lambda x: x.name == ast.receiver.name, [j for i in o['env'] for j in i]),None)
+
+                if type(sym.value) is CName:
+                    codegen += self.emit.emitGETSTATIC(f"{sym.value.value}/{ast.field}",ast.mtype,o['frame'])
+                else:
+                    codegen += self.emit.emitREADVAR(ast.obj.name, sym.mtype, sym.value.value, o['frame'])
+                    codegen += self.emit.emitGETFIELD(f"{sym.value.value}/{ast.field}",ast.mtype,o['frame'])
+            else:
+                codegen += self.visit(ast.receiver, o)[0]
+                codegen += self.emit.emitGETFIELD(f"{ast.obj.className}/{ast.field}",ast.mtype,o['frame'])
+            return codegen, ast.mtype
 
 
     

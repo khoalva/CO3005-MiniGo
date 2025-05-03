@@ -1,13 +1,16 @@
 .source MiniGoClass.java
 .class public MiniGoClass
 .super java.lang.Object
-.field static final a <class 'NoneType'>
-.field static final b <class 'NoneType'>
+.field static final a I
+.field static final b I
 
 .method public static main([Ljava/lang/String;)V
 Label0:
 .var 0 is args [Ljava/lang/String; from Label0 to Label1
 Label2:
+	getstatic MiniGoClass/a I
+	getstatic MiniGoClass/b I
+	iadd
 	invokestatic io/putInt(I)V
 Label3:
 Label1:
@@ -30,9 +33,9 @@ Label1:
 .method public static <clinit>()V
 Label0:
 	iconst_5
-	putstatic MiniGoClass/a <class 'NoneType'>
+	putstatic MiniGoClass/a I
 	bipush 10
-	putstatic MiniGoClass/b <class 'NoneType'>
+	putstatic MiniGoClass/b I
 Label1:
 	return
 .limit stack 3
