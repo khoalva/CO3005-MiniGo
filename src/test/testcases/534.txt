@@ -1,0 +1,12 @@
+
+        func foo1(x int) int{
+            return x + 1;
+        }
+        func foo2(x int, y int) int{
+            return x + y;
+        }
+        func main() {
+            var a int = foo1(5);
+            var b int = foo2(a, 10);
+            putInt(b);
+        };

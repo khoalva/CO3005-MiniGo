@@ -172,6 +172,6 @@ class Frame():
     *   @return an integer representing the break label
     '''
     def getBreakLabel(self):
-        if not brkLabel: # type: ignore
+        if not self.brkLabel: # type: ignore
             raise IllegalRuntimeException("None break label")
         return self.brkLabel[-1]

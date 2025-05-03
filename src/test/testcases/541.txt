@@ -1,0 +1,6 @@
+
+        var a int = 5 + 5;
+        var b int = 10;
+        func main() {
+            putInt(a + b);
+        };

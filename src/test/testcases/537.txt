@@ -1,0 +1,11 @@
+
+        func main() {
+            var a int = 0;
+            for a < 5 {
+                if a == 3 {
+                    break;
+                }
+                putInt(a);
+                a += 1;
+            }
+        };

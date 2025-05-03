@@ -6,45 +6,14 @@
 Label0:
 .var 0 is args [Ljava/lang/String; from Label0 to Label1
 Label2:
-.var 1 is a [I from Label2 to Label3
-	iconst_2
-	anewarray [I
-	dup
+.var 1 is a I from Label2 to Label3
 	iconst_0
-	iconst_2
-	newarray int
-	dup
+	istore_1
 	iconst_0
-	iconst_1
-	iastore
-	dup
-	iconst_1
-	iconst_2
-	iastore
-	aastore
-	dup
-	iconst_1
-	iconst_2
-	newarray int
-	dup
-	iconst_0
-	iconst_3
-	iastore
-	dup
-	iconst_1
-	iconst_4
-	iastore
-	aastore
-	astore_1
-	aload_1
-	iconst_0
-	aaload
-	astore_2
-	iconst_0
-	istore_3
+	istore_1
 Label6:
-	iload_3
-	iconst_2
+	iload_1
+	iconst_5
 	if_icmpge Label7
 	iconst_1
 	goto Label8
@@ -53,22 +22,33 @@ Label7:
 Label8:
 	ifle Label5
 Label9:
-	aload_2
-	iload_3
-	iaload
+	iload_1
+	iconst_3
+	if_icmpne Label13
+	iconst_1
+	goto Label14
+Label13:
+	iconst_0
+Label14:
+	ifle Label11
+Label15:
+	goto Label5
+Label16:
+Label11:
+	iload_1
 	invokestatic io/putInt(I)V
 Label10:
 Label4:
-	iload_3
+	iload_1
 	iconst_1
 	iadd
-	istore_3
+	istore_1
 	goto Label6
 Label5:
 Label3:
 Label1:
 	return
-.limit stack 15
+.limit stack 10
 .limit locals 4
 .end method
 

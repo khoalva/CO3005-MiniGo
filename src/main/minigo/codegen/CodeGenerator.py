@@ -81,7 +81,43 @@ class CodeGenerator(BaseVisitor,Utils):
         self.emit.printout(self.emit.emitLABEL(frame.getEndLabel(), frame))
         self.emit.printout(self.emit.emitRETURN(VoidType(), frame))  
         self.emit.printout(self.emit.emitENDMETHOD(frame))  
-        frame.exitScope()  
+        frame.exitScope()
+
+    def emitObjectCInit(self, ast: Program, env):
+        frame = Frame("<clinit>", VoidType())  # Sửa lỗi đánh máy từ <cinit> thành <clinit>
+        self.emit.printout(self.emit.emitMETHOD("<clinit>", MType([], VoidType()), True, frame)) 
+        frame.enterScope(True)  
+        self.emit.printout(self.emit.emitLABEL(frame.getStartLabel(), frame))
+
+        env['frame'] = frame
+        
+        # Tạo danh sách các VarDecl có varInit và là static
+        static_var_decls = list(filter(lambda x: isinstance(x, VarDecl) and x.varInit is not None or isinstance(x, ConstDecl) and x.iniExpr is not None, ast.decl))
+        
+        # Tạo Block chứa các VarDecl và xử lý
+        for decl in static_var_decls:
+            if isinstance(decl, VarDecl):
+                env['isLeft'] = False
+                env['stmt'] = False
+                code = self.visit(decl.varInit, env)[0]
+                env['isLeft'] = False
+                env['stmt'] = True
+                self.emit.printout(code)
+                self.emit.printout(self.emit.emitPUTSTATIC(f"{self.className}/{decl.varName}", decl.varType, frame))
+                
+            elif isinstance(decl, ConstDecl):
+                env['isLeft'] = False
+                env['stmt'] = False
+                code = self.visit(decl.iniExpr, env)[0]
+                env['isLeft'] = False
+                env['stmt'] = True
+                self.emit.printout(code)
+                self.emit.printout(self.emit.emitPUTSTATIC(f"{self.className}/{decl.conName}", decl.conType, frame))
+        
+        self.emit.printout(self.emit.emitLABEL(frame.getEndLabel(), frame))
+        self.emit.printout(self.emit.emitRETURN(VoidType(), frame))  
+        self.emit.printout(self.emit.emitENDMETHOD(frame))  
+        frame.exitScope()
 
     def visitProgram(self, ast, c):
         env ={}
@@ -91,6 +127,7 @@ class CodeGenerator(BaseVisitor,Utils):
         self.emit.printout(self.emit.emitPROLOG(self.className, "java.lang.Object"))
         env = reduce(lambda a,x: self.visit(x,a), ast.decl, env)
         self.emitObjectInit()
+        self.emitObjectCInit(ast, env)
         self.emit.printout(self.emit.emitEPILOG())
         return env
 
@@ -120,18 +157,27 @@ class CodeGenerator(BaseVisitor,Utils):
         self.emit.printout(self.emit.emitENDMETHOD(frame))
         frame.exitScope()
         return o
+    def visitParamDecl(self, ast, o):
+        frame = o['frame']
+        index = frame.getNewIndex()
+        o['env'][0].append(Symbol(ast.parName, ast.parType, Index(index)))
+        self.emit.printout(self.emit.emitVAR(index, ast.parName, ast.parType, frame.getStartLabel(), frame.getEndLabel(), frame))
+        return o
+    
     def visitVarDecl(self, ast, o):
 
         if 'frame' not in o: # global var
             o['env'][0].append(Symbol(ast.varName, ast.varType, CName(self.className)))
-            self.emit.printout(self.emit.emitATTRIBUTE(ast.varName, ast.varType, True, False, str(ast.varInit.value) if ast.varInit else None))
+            self.emit.printout(self.emit.emitATTRIBUTE(ast.varName, ast.varType, True, False, None))
         else:
             frame = o['frame']
             index = frame.getNewIndex()
             o['env'][0].append(Symbol(ast.varName, ast.varType, Index(index)))
             self.emit.printout(self.emit.emitVAR(index, ast.varName, ast.varType, frame.getStartLabel(), frame.getEndLabel(), frame))  
             if ast.varInit:
+                o['stmt'] = False
                 codegen = self.visit(ast.varInit, o)[0]
+                o['stmt'] = True
                 self.emit.printout(codegen)
             else:
                 if type(ast.varType) is FloatType:
@@ -146,27 +192,47 @@ class CodeGenerator(BaseVisitor,Utils):
             self.emit.printout(self.emit.emitWRITEVAR(ast.varName, ast.varType, index,  frame))
         return o
     
+    def visitConstDecl(self, ast, o):
+
+        if 'frame' not in o:
+            o['env'][0].append(Symbol(ast.conName, ast.conType, CName(self.className)))
+            self.emit.printout(self.emit.emitATTRIBUTE(ast.conName, ast.conType, True, True, None))
+        else:
+            frame = o['frame']
+            index = frame.getNewIndex()
+            o['env'][0].append(Symbol(ast.conName, ast.conType, Index(index)))
+            self.emit.printout(self.emit.emitVAR(index, ast.conName, ast.conType, frame.getStartLabel(), frame.getEndLabel(), frame))  
+            o['stmt'] = False
+            codegen = self.visit(ast.iniExpr, o)[0]
+            o['stmt'] = True
+            self.emit.printout(codegen)
+    
+            self.emit.printout(self.emit.emitWRITEVAR(ast.conName, ast.conType, index,  frame))
+        return o
+
+
     def visitFuncCall(self, ast, o):
         if o['stmt']:
             sym = next(filter(lambda x: x.name == ast.funName, o['env'][-1]),None)
             env = o.copy()
             env['isLeft'] = False
-            o['stmt'] = False
+            env['stmt'] = False
             [self.emit.printout(self.visit(x, env)[0]) for x in ast.args]
-            o['stmt'] = True
+            env['stmt'] = True
             self.emit.printout(self.emit.emitINVOKESTATIC(f"{sym.value.value}/{ast.funName}",sym.mtype, o['frame']))
             return o
         else:
             codegen = ''
-            sym = next(filter(lambda x: x.name == ast.funName, o['env'][0]),None)
+            sym = next(filter(lambda x: x.name == ast.funName, o['env'][-1]),None)
             env = o.copy()
             env['isLeft'] = False
+            env['stmt'] = False
             [self.emit.printout(self.visit(x, env)[0]) for x in ast.args]
             if sym.value.isStatic:
                 codegen += self.emit.emitINVOKESTATIC(f"{sym.value.value}/{ast.funName}",sym.mtype, o['frame'])
             else:
                 codegen += self.emit.emitINVOKEVIRTUAL(f"{sym.value.value}/{ast.funName}",sym.mtype, o['frame'])
-            return codegen, sym.mtype.retnType
+            return codegen, sym.mtype.rettype
     
     def visitBlock(self, ast, o):
         env = o.copy()
@@ -180,6 +246,7 @@ class CodeGenerator(BaseVisitor,Utils):
     
     def visitId(self, ast, o):
         sym = next(filter(lambda x: x.name == ast.name, [j for i in o['env'] for j in i]),None)
+
         if type(sym.value) is Index:
             if o['isLeft']:
                 return self.emit.emitWRITEVAR(ast.name, sym.mtype, sym.value.value, o['frame']), sym.mtype
@@ -187,9 +254,9 @@ class CodeGenerator(BaseVisitor,Utils):
                 return self.emit.emitREADVAR(ast.name, sym.mtype, sym.value.value, o['frame']), sym.mtype
         else:         
             if o['isLeft']:
-                return self.emit.emitWRITEVAR(ast.name, sym.mtype, 0, o['frame']), sym.mtype
+                return self.emit.emitPUTSTATIC(f"{self.className}/{ast.name}", sym.mtype, o['frame']), sym.mtype
             else:
-                return self.emit.emitREADVAR(ast.name, sym.mtype, 0, o['frame']), sym.mtype
+                return self.emit.emitGETSTATIC(f"{self.className}/{ast.name}", sym.mtype, o['frame']), sym.mtype
         
     def visitIntLiteral(self, ast, o):
         return self.emit.emitPUSHICONST(ast.value, o['frame']), IntType()
@@ -410,6 +477,7 @@ class CodeGenerator(BaseVisitor,Utils):
         label1 = o['frame'].getNewLabel()
         label2 = o['frame'].getNewLabel()
         codeL, left = self.visit(ast.expr, o)
+        
         self.emit.printout(codeL)
         self.emit.printout(self.emit.emitIFFALSE(label1, o['frame']))
         self.visit(ast.thenStmt, o)
@@ -429,18 +497,16 @@ class CodeGenerator(BaseVisitor,Utils):
         """
         o['frame'].enterLoop()
         frame = o['frame']
-        breakLabel = frame.getNewLabel()
-        continueLabel = frame.getNewLabel()
-        
-        self.emit.printout(self.emit.emitLABEL(continueLabel, frame))
+
+        self.emit.printout(self.emit.emitLABEL(frame.getContinueLabel(), frame))
         o['stmt'] = False
         condCode, _ = self.visit(ast.cond, o)
         o['stmt'] = True
         self.emit.printout(condCode)
-        self.emit.printout(self.emit.emitIFFALSE(breakLabel, frame))
+        self.emit.printout(self.emit.emitIFFALSE(frame.getBreakLabel(), frame))
         self.visit(ast.loop, o)
-        self.emit.printout(self.emit.emitGOTO(continueLabel, frame))
-        self.emit.printout(self.emit.emitLABEL(breakLabel, frame))
+        self.emit.printout(self.emit.emitGOTO(frame.getContinueLabel(), frame))
+        self.emit.printout(self.emit.emitLABEL(frame.getBreakLabel(), frame))
 
         o['frame'].exitLoop()
 
@@ -454,8 +520,7 @@ class CodeGenerator(BaseVisitor,Utils):
         """
         o['frame'].enterLoop()
         frame = o['frame']
-        breakLabel = frame.getNewLabel()
-        continueLabel = frame.getNewLabel()
+
         self.visit(ast.init, o)
         
         forLabel = frame.getNewLabel()
@@ -464,12 +529,12 @@ class CodeGenerator(BaseVisitor,Utils):
         code, _ = self.visit(ast.cond, o)
         o['stmt'] = True
         self.emit.printout(code)
-        self.emit.printout(self.emit.emitIFFALSE(breakLabel, frame))
+        self.emit.printout(self.emit.emitIFFALSE(frame.getBreakLabel(), frame))
         self.visit(ast.loop, o)
-        self.emit.printout(self.emit.emitLABEL(continueLabel, frame))
+        self.emit.printout(self.emit.emitLABEL(frame.getContinueLabel(), frame))
         self.visit(ast.upda, o)
         self.emit.printout(self.emit.emitGOTO(forLabel, frame))
-        self.emit.printout(self.emit.emitLABEL(breakLabel, frame))
+        self.emit.printout(self.emit.emitLABEL(frame.getBreakLabel(), frame))
 
         o['frame'].exitLoop()
         return o
@@ -487,18 +552,23 @@ class CodeGenerator(BaseVisitor,Utils):
             lhs: LHS
             rhs: Expr
         """
-        o['isLeft'] = True
-        codeL, typeLeft = self.visit(ast.lhs, o)
-        o['isLeft'] = False
         o['stmt'] = False
         codeR, typeRight = self.visit(ast.rhs, o)
         o['stmt'] = True
         if type(ast.lhs) is Id:
-            frame = o['frame']
-            index = frame.getNewIndex()
-            o['env'][0].append(Symbol(ast.lhs.name, typeRight, Index(index)))
+            sym = next(filter(lambda x: x.name == ast.lhs.name, [j for i in o['env'] for j in i]),None)
+            if sym is None:
+                frame = o['frame']
+                index = frame.getNewIndex()
+                o['env'][0].append(Symbol(ast.lhs.name, typeRight, Index(index)))
+            o['isLeft'] = True
+            codeL, typeLeft = self.visit(ast.lhs, o)
+            o['isLeft'] = False
             self.emit.printout(codeR + codeL)
         else:
+            o['isLeft'] = True
+            codeL, typeLeft = self.visit(ast.lhs, o)
+            o['isLeft'] = False
             self.emit.printout(codeL)
             self.emit.printout(codeR)
             self.emit.emitASTORE(typeLeft, o['frame'])
@@ -510,8 +580,16 @@ class CodeGenerator(BaseVisitor,Utils):
         self.emit.printout(code)
         self.emit.printout(self.emit.emitRETURN(typ, o['frame']))
         return o
-        
-        
+    
+    def visitBreak(self, ast, o):
+        self.emit.printout(self.emit.emitGOTO(o['frame'].getBreakLabel(), o['frame']))
+        return o
+    def visitContinue(self, ast, o):
+        self.emit.printout(self.emit.emitGOTO(o['frame'].getContinueLabel(), o['frame']))
+        return o
+    
+    def visitStructType(self, ast, o):
+        return ast, ast.name
 
 
     

@@ -1,0 +1,11 @@
+
+        func foo1(x int) int{
+            return x + 1;
+        }
+        func foo2() int{
+            return foo1(foo1(5));
+        }
+        func main() {
+            var a int = foo2();
+            putInt(a);
+        };

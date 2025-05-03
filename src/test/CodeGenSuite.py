@@ -36,10 +36,18 @@ class CheckCodeGenSuite(unittest.TestCase):
     #     input = """func main() {var a [2][2]int = [2][2]int{{1,2},{3,4}}; putInt(a[1][0]);};"""
     #     expect = "3"
     #     self.assertTrue(TestCodeGen.test(input,expect,508))
-    # # def test_array_literal_3(self):
-    # #     input = """func main() {var a [2][2]int = [2][2]int{{1,2},{3,4}}; putInt(a[0];};"""
-    # #     expect = "{1,2}"
-    # #     self.assertTrue(TestCodeGen.test(input,expect,509))
+    # def test_array_literal_3(self):
+    #     input = """
+    #         func main() {
+    #             var a [2][2]int = [2][2]int{{1,2},{3,4}}
+    #             b := a[0]
+    #             for i := 0; i < 2; i += 1 {
+    #                 putInt(b[i])
+    #             }
+    #         }
+    #         """
+    #     expect = "12"
+    #     self.assertTrue(TestCodeGen.test(input,expect,509))
     # def test_binary_op(self):
     #     input = """func main() {var a int = 5; var b int = 10; putInt(a + b);};"""
     #     expect = "15"
@@ -136,13 +144,148 @@ class CheckCodeGenSuite(unittest.TestCase):
     #     """
     #     expect = "03"
     #     self.assertTrue(TestCodeGen.test(input,expect,530))
-    def test_return(self):
-        input = """
-        func foo() int{
-            return 5;
-        }
-        func main() {
-            putInt(foo());
-        };"""
-        expect = "5"
-        self.assertTrue(TestCodeGen.test(input,expect,531))
+    # def test_return(self):
+    #     input = """
+    #     func foo() int{
+    #         return 5;
+    #     }
+    #     func main() {
+    #         putInt(foo());
+    #     };"""
+    #     expect = "5"
+    #     self.assertTrue(TestCodeGen.test(input,expect,531))
+    # def test_return_2(self):
+    #     input = """
+    #     func foo1() int{
+    #         return 5;
+    #     }
+    #     func foo2() int{
+    #         return foo1();
+    #     }
+    #     func main() {
+    #         var a int = foo2();
+    #         putInt(a);
+    #     };"""
+    #     expect = "5"
+    #     self.assertTrue(TestCodeGen.test(input,expect,532))
+    # def test_param_decl(self):
+    #     input = """
+    #     func foo1(x int) int{
+    #         return x + 1;
+    #     }
+    #     func foo2(x int) int{
+    #         return x + 2;
+    #     }
+    #     func main() {
+    #         var a int = foo1(5);
+    #         var b int = foo2(a);
+    #         putInt(b);
+    #     };"""
+    #     expect = "8"
+    #     self.assertTrue(TestCodeGen.test(input,expect,533))
+
+    # def test_param_decl_2(self):
+    #     input = """
+    #     func foo1(x int) int{
+    #         return x + 1;
+    #     }
+    #     func foo2(x int, y int) int{
+    #         return x + y;
+    #     }
+    #     func main() {
+    #         var a int = foo1(5);
+    #         var b int = foo2(a, 10);
+    #         putInt(b);
+    #     };"""
+    #     expect = "16"
+    #     self.assertTrue(TestCodeGen.test(input,expect,534))
+
+    # def test_func_call(self):
+    #     input = """
+    #     func foo1(x int) int{
+    #         return x + 1;
+    #     }
+    #     func foo2() int{
+    #         return foo1(foo1(5));
+    #     }
+    #     func main() {
+    #         var a int = foo2();
+    #         putInt(a);
+    #     };"""
+    #     expect = "7"
+    #     self.assertTrue(TestCodeGen.test(input,expect,535))
+    # def test_const_decl(self):
+    #     input = """
+    #     const a = 5;
+    #     const b = 10;
+    #     func main() {
+    #         putInt(a + b);
+    #     };"""
+    #     expect = "15"
+    #     self.assertTrue(TestCodeGen.test(input,expect,536))
+    # def test_break_stmt(self):
+    #     input = """
+    #     func main() {
+    #         var a int = 0;
+    #         for a < 5 {
+    #             if a == 3 {
+    #                 break;
+    #             }
+    #             putInt(a);
+    #             a += 1;
+    #         }
+    #     };"""
+    #     expect = "012"
+    #     self.assertTrue(TestCodeGen.test(input,expect,537))
+    # def test_break_stmt_2(self):
+    #     input = """
+    #     func main() {
+    #         var a int = 0;
+    #         for a := 0; a < 5; a += 1 {
+    #             if a == 3 {
+    #                 break;
+    #             }
+    #             putInt(a);
+    #         }
+            
+    #     };"""
+    #     expect = "012"
+    #     self.assertTrue(TestCodeGen.test(input,expect,538))
+    # def test_continue_stmt(self):
+    #     input = """
+    #     func main() {
+    #         var a int = 0;
+    #         for a < 5 {
+    #             a += 1;
+    #             if a == 3 {
+    #                 continue;
+    #             }
+    #             putInt(a);
+                
+    #         }
+    #     };"""
+    #     expect = "1245"
+    #     self.assertTrue(TestCodeGen.test(input,expect,539))
+    # def test_continue_stmt_2(self):
+    #     input = """
+    #     func main() {
+    #         var a int = 0;
+    #         for a := 0; a < 5; a += 1 {
+    #             if a == 3 {
+    #                 continue;
+    #             }
+    #             putInt(a);
+    #         }
+    #         putInt(a);
+    #     };"""
+    #     expect = "01245"
+    #     self.assertTrue(TestCodeGen.test(input,expect,540))
+    # def test_var_decl(self):
+    #     input = """
+    #     var a int = 5 + 5;
+    #     var b int = 10;
+    #     func main() {
+    #         putInt(a + b);
+    #     };"""
+    #     expect = "20"
+    #     self.assertTrue(TestCodeGen.test(input,expect,541))
