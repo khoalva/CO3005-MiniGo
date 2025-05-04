@@ -33,7 +33,7 @@ class Emitter():
         else:
             return str(typeIn)
 
-    def getFullType(inType):
+    def getFullType(self, inType):
         typeIn = type(inType)
         if typeIn is IntType:
             return "int"
@@ -41,6 +41,16 @@ class Emitter():
             return "java/lang/String"
         elif typeIn is VoidType:
             return "void"
+        elif typeIn is FloatType:
+            return "float"
+        elif typeIn is BoolType:
+            return "boolean"
+        elif typeIn is cgen.ArrayType:
+            return "[" + self.getFullType(inType.eleType)
+        elif typeIn is cgen.MType:
+            return "(" + "".join(list(map(lambda x: self.getFullType(x), inType.partype))) + ")" + self.getFullType(inType.rettype)
+        elif typeIn is cgen.ClassType:
+            return inType.name
 
     def emitPUSHICONST(self, in_, frame):
         #in: Int or Sring
@@ -130,6 +140,17 @@ class Emitter():
             return self.jvm.emitANEWARRAY(self.getJVMType(in_))
         else:
             raise IllegalOperandException(str(in_))
+    
+    def emitNEW(self, in_, frame):
+        #in_: Type
+        #frame: Frame
+        
+        frame.push()
+        if type(in_) is cgen.ClassType:
+            return self.jvm.emitNEW(self.getFullType(in_))
+        else:
+            raise IllegalOperandException(str(in_))
+
     def emitALOAD(self, in_, frame):
         #in_: Type
         #frame: Frame

@@ -325,18 +325,127 @@ class CheckCodeGenSuite(unittest.TestCase):
     #     """
     #     expect = "1"
     #     self.assertTrue(TestCodeGen.test(input,expect,544))
-    def test_field_access(self):
+    # def test_field_access(self):
+    #     input = """
+    #     type Test struct {
+    #         x int
+    #         y int
+    #     }
+
+    #     func main() {
+    #         var a Test
+    #         a.x := 5
+    #         putInt(a.x)
+    #     }
+    #     """
+    #     expect = "5"
+    #     self.assertTrue(TestCodeGen.test(input,expect,545))
+    # def test_field_access_2(self):
+    #     input = """
+    #     type Test2 struct {
+    #         z int
+    #     }
+    #     type Test1 struct {
+    #         y Test2
+    #     }
+    #     type Test struct {
+    #         x Test1
+    #     }
+
+    #     func main() {
+    #         var a Test
+    #         var b Test1
+    #         var c Test2
+    #         c.z := 5
+    #         b.y := c
+    #         a.x := b
+    #         putInt(a.x.y.z)
+    #     }
+    #     """
+    #     expect = "5"
+    #     self.assertTrue(TestCodeGen.test(input,expect,546))
+    # def test_field_access_3(self):
+    #     input = """
+    #     type Test2 struct {
+    #         z int
+    #     }
+    #     type Test1 struct {
+    #         y Test2
+    #     }
+    #     type Test struct {
+    #         x Test1
+    #     }
+
+    #     func main() {
+    #         var a Test
+    #         var b Test1
+    #         var c Test2
+    #         c.z := 5
+    #         b.y := c
+    #         a.x := b
+    #         a.x.y.z := 10
+    #         putInt(a.x.y.z)
+    #     }
+    #     """
+    #     expect = "10"
+    #     self.assertTrue(TestCodeGen.test(input,expect,547))    
+
+    # def test_assign_stmt(self):
+    #     input = """
+    #     func main() {
+    #         a := 5
+    #         putInt(a)
+    #     }
+    #     """
+    #     expect = "5"
+    #     self.assertTrue(TestCodeGen.test(input,expect,548))
+    # def test_struct_literal(self):
+    #     input = """
+    #     type Test struct {
+    #         x int
+    #         y int
+    #     }
+
+    #     func main() {
+    #         a := Test{x:1, y:2}
+    #         putInt(a.x)
+    #     }
+    #     """
+    #     expect = "1"
+    #     self.assertTrue(TestCodeGen.test(input,expect,549))
+    
+    # def test_struct_literal_2(self):
+    #     input = """
+    #     type Test struct {
+    #         x float
+    #         y int
+    #     }
+
+    #     func main() {
+    #         a := Test{x:1, y:2}
+    #         putInt(a.x)
+    #     }
+    #     """
+    #     expect = "1"
+    #     self.assertTrue(TestCodeGen.test(input,expect,550))
+
+    def test_struct_literal_3(self):
         input = """
-        type Test struct {
+        type Test1 struct {
             x int
             y int
         }
 
+        type Test struct {
+            x Test1
+        }
+
         func main() {
-            var a Test
-            a.x := 5
-            putInt(a.x)
+            a := Test1{x:1, y:2}
+            c := Test{x:a}
+            c.x := Test1{x:3, y:4}
+            putInt(c.x.y)
         }
         """
-        expect = "5"
-        self.assertTrue(TestCodeGen.test(input,expect,545))
+        expect = "4"
+        self.assertTrue(TestCodeGen.test(input,expect,551))

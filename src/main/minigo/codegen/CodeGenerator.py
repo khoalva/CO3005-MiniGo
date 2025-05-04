@@ -122,6 +122,22 @@ class CodeGenerator(BaseVisitor,Utils):
         self.emit.printout(self.emit.emitENDMETHOD(frame))  
         frame.exitScope()
 
+    def _emitObjectInit(self, emit, className):
+        frame = Frame("<init>", VoidType())  
+        emit.printout(emit.emitMETHOD("<init>", MType([], VoidType()), False, frame))  # Bắt đầu định nghĩa phương thức <init>
+        frame.enterScope(True)  
+        emit.printout(emit.emitVAR(frame.getNewIndex(), "this", ClassType(className), frame.getStartLabel(), frame.getEndLabel(), frame))  # Tạo biến "this" trong phương thức <init>
+        
+        emit.printout(emit.emitLABEL(frame.getStartLabel(), frame))
+        emit.printout(emit.emitREADVAR("this", ClassType(className), 0, frame))  
+        emit.printout(emit.emitINVOKESPECIAL(frame))  
+    
+        
+        emit.printout(emit.emitLABEL(frame.getEndLabel(), frame))
+        emit.printout(emit.emitRETURN(VoidType(), frame))  
+        emit.printout(emit.emitENDMETHOD(frame))  
+        frame.exitScope()
+
     def visitProgram(self, ast, c):
         env ={}
         env['env'] = [c]
@@ -206,10 +222,12 @@ class CodeGenerator(BaseVisitor,Utils):
                     self.emit.printout(self.emit.emitPUSHICONST(0, frame))
                 elif type(ast.varType) is BoolType:
                     self.emit.printout(self.emit.emitPUSHICONST(0, frame))
-                else:
-                    self.emit.printout(self.emit.emitPUSHNULL(frame))
+
             if type(varType) is Id:
                 varType = ClassType(varType.name)
+                self.emit.printout(self.emit.emitNEW(varType, frame))
+                self.emit.printout(self.emit.emitDUP(frame))
+                self.emit.printout(self.emit.emitINVOKESPECIAL(frame, f"{varType.name}/<init>", MType([], VoidType())))
             o, index = self.declareVar(ast.varName, varType, o)
             self.emit.printout(self.emit.emitWRITEVAR(ast.varName, varType, index,  frame))
         return o
@@ -573,38 +591,7 @@ class CodeGenerator(BaseVisitor,Utils):
     #     """
 
 
-    def visitAssign(self, ast, o):
-        """
-            lhs: LHS
-            rhs: Expr
-        """
-        o['stmt'] = False
-        codeR, typeRight = self.visit(ast.rhs, o)
-        o['stmt'] = True
-        if type(ast.lhs) is Id:
-            sym = next(filter(lambda x: x.name == ast.lhs.name, [j for i in o['env'] for j in i]),None)
-            if sym is None:
-                o, index = self.declareVar(ast.lhs.name, ast.lhs.mtype, o)
-                
-            o['isLeft'] = True
-            codeL, typeLeft = self.visit(ast.lhs, o)
-            o['isLeft'] = False
-            self.emit.printout(codeR + codeL)
-        elif type(ast.lhs) is FieldAccess:
-            o['isLeft'] = True
-            codeL, typeLeft = self.visit(ast.lhs, o)
-            o['isLeft'] = False
-            self.emit.printout(codeL)
-            self.emit.printout(codeR)
-            self.emit.printout(self.emit.emitPUTFIELD(f"{typeLeft.receiver.name}/{ast.lhs.field}",ast.mtype,o['frame']))
-        else:
-            o['isLeft'] = True
-            codeL, typeLeft = self.visit(ast.lhs, o)
-            o['isLeft'] = False
-            self.emit.printout(codeL)
-            self.emit.printout(codeR)
-            self.emit.emitASTORE(typeLeft, o['frame'])
-        return o
+    
     def visitReturn(self, ast, o):
         o['stmt'] = False
         code, typ = self.visit(ast.expr, o)
@@ -626,42 +613,138 @@ class CodeGenerator(BaseVisitor,Utils):
         emit.printout(self.emit.emitPROLOG(ast.name, "java.lang.Object"))
         
         for x in ast.elements:
-            emit.printout(self.emit.emitATTRIBUTE(x[0],x[1],False,False, None))
+            if type(x[1]) is Id:
+                eleType = ClassType(x[1].name)
+            else:
+                eleType = x[1]
+            emit.printout(self.emit.emitATTRIBUTE(x[0],eleType,False,False, None))
         temp = self.className
         self.className = ast.name
-        # self.emitObjectInit()
+        self._emitObjectInit(emit, ast.name)
         self.className = temp
         # self.emitObjectCInit(ast, o)
         emit.emitEPILOG()
-        o['env'][0].append(Symbol(ast.name, ClassType(ast.name), None))
+        o['env'][0].append(ast)
         return o
     
     def visitFieldAccess(self, ast, o):
         if o['isLeft']:
-            codegen = ''
-            if type(ast.receiver) is Id:
-                # sym = next(filter(lambda x: x.name == ast.receiver.name, [j for i in o['env'] for j in i]),None)
-                # self.emit.printout(self.emit.emitREADVAR(ast.receiver.name, sym.mtype, sym.value.value, o['frame']))
-                # self.emit.printout(self.emit.emitGETFIELD(f"{sym.value.value}/{ast.field}",ast.mtype,o['frame']))
-                return self.emit.emitPUTFIELD(f"{ast.receiver.name}/{ast.field}",ast.mtype,o['frame'])
-            else:
-                self.emit.printout(self.visit(ast.receiver, o)[0])
-                
-            return codegen, ast.mtype
-        else:
-            codegen = ''
             if type(ast.receiver) is Id:
                 sym = next(filter(lambda x: x.name == ast.receiver.name, [j for i in o['env'] for j in i]),None)
-
-                if type(sym.value) is CName:
-                    codegen += self.emit.emitGETSTATIC(f"{sym.value.value}/{ast.field}",ast.mtype,o['frame'])
+                struct_sym = next(filter(lambda x: x.name == sym.mtype.name, o['env'][-1]),None)
+                ele = next(filter(lambda x: x[0] == ast.field, struct_sym.elements),None)
+                if ele is None:
+                    _type = None
                 else:
-                    codegen += self.emit.emitREADVAR(ast.obj.name, sym.mtype, sym.value.value, o['frame'])
-                    codegen += self.emit.emitGETFIELD(f"{sym.value.value}/{ast.field}",ast.mtype,o['frame'])
+                    _type = ele[1]
+                    if type(_type) is Id:
+                        _type = ClassType(_type.name)
+                return self.emit.emitPUTFIELD(f"{struct_sym.name}/{ast.field}",_type,o['frame'])
             else:
+                o['isLeft'] = False
+                code, recType = self.visit(ast.receiver, o)
+                o['isLeft'] = True
+
+                ele = next(filter(lambda x: x[0] == ast.field, recType.elements),None)
+                if ele is None:
+                    _type = None
+                else:
+                    _type = ele[1]
+                    if type(_type) is Id:
+                        _type = ClassType(_type.name)
+                return self.emit.emitPUTFIELD(f"{recType.name}/{ast.field}",_type,o['frame'])
+        else:
+            codegen = ''
+            _type = None
+            if type(ast.receiver) is Id:
+                sym = next(filter(lambda x: x.name == ast.receiver.name, [j for i in o['env'] for j in i]),None)
+                struct_sym = next(filter(lambda x: x.name == sym.mtype.name, o['env'][-1]),None)
+                ele = next(filter(lambda x: x[0] == ast.field, struct_sym.elements),None)
+                if ele is None:
+                    _type = None
+                else:
+                    _type = ele[1]
+                    if type(_type) is Id:
+                        _type = ClassType(_type.name)
                 codegen += self.visit(ast.receiver, o)[0]
-                codegen += self.emit.emitGETFIELD(f"{ast.obj.className}/{ast.field}",ast.mtype,o['frame'])
-            return codegen, ast.mtype
+                codegen += self.emit.emitGETFIELD(f"{struct_sym.name}/{ast.field}",_type,o['frame'])
+            else:
+                code, recType = self.visit(ast.receiver, o)
+                codegen += code
+                ele = next(filter(lambda x: x[0] == ast.field, recType.elements),None)
+                if ele is None:
+                    _type = None
+                else:
+                    _type = ele[1]
+                    if type(_type) is Id:
+                        _type = ClassType(_type.name)
+                
+                codegen += self.emit.emitGETFIELD(f"{recType.name}/{ast.field}",_type,o['frame'])
+            if type(_type) is ClassType:
+                _type = next(filter(lambda x: x.name == _type.name, o['env'][-1]),None)
+            return codegen, _type
 
+    def visitAssign(self, ast, o):
+        """
+            lhs: LHS
+            rhs: Expr
+        """
+        if type(ast.rhs) is StructLiteral:
+            if type(ast.lhs) is Id:
+                code = ''
+                sym = next(filter(lambda x: x.name == ast.lhs.name, [j for i in o['env'] for j in i]),None)
+                if sym is None:
+                    varType = ClassType(ast.rhs.name)
+                    o, index = self.declareVar(ast.lhs.name, varType, o)
+                    self.emit.printout(self.emit.emitNEW(varType, o['frame']))
+                    self.emit.printout(self.emit.emitDUP(o['frame']))
+                    self.emit.printout(self.emit.emitINVOKESPECIAL(o['frame'], f"{varType.name}/<init>", MType([], VoidType())))
 
+                o['isLeft'] = True    
+                codeL, typeLeft = self.visit(ast.lhs, o)
+                o['isLeft'] = False
+                self.emit.printout(codeL)
+                codeL, typeLeft = self.visit(ast.lhs, o)
+                for ele in ast.rhs.elements:
+                    code += codeL
+                    o['stmt'] = False
+                    codeR, typeRight = self.visit(ele[1], o)
+                    o['stmt'] = True
+                    code += codeR
+                    code += self.emit.emitPUTFIELD(f"{ast.rhs.name}/{ele[0]}", typeRight, o['frame'])
+                self.emit.printout(code)
+            return o
+
+        else:
+            o['stmt'] = False
+            codeR, typeRight = self.visit(ast.rhs, o)
+            o['stmt'] = True
+            if type(ast.lhs) is Id:
+                sym = next(filter(lambda x: x.name == ast.lhs.name, [j for i in o['env'] for j in i]),None)
+                if sym is None:
+                    o, index = self.declareVar(ast.lhs.name, typeRight, o)
+
+                o['isLeft'] = True
+                codeL, typeLeft = self.visit(ast.lhs, o)
+                o['isLeft'] = False
+                self.emit.printout(codeR + codeL)
+            elif type(ast.lhs) is FieldAccess:
+                self.emit.printout(self.visit(ast.lhs.receiver, o)[0])
+                o['isLeft'] = True
+                codeL = self.visit(ast.lhs, o)
+                o['isLeft'] = False
+                self.emit.printout(codeR + codeL)
+            else:
+                o['isLeft'] = True
+                codeL, typeLeft = self.visit(ast.lhs, o)
+                o['isLeft'] = False
+                self.emit.printout(codeL)
+                self.emit.printout(codeR)
+                self.emit.emitASTORE(typeLeft, o['frame'])
+            return o
     
+    def visitStructLiteral(self, ast, o):
+        codegen = ''
+        for x in ast.value:
+            codegen += self.visit(x, o)[0]
+        return codegen, ast.eleType

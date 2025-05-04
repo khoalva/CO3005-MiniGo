@@ -1,8 +1,7 @@
 .source Test.java
 .class public Test
 .super java.lang.Object
-.field x I
-.field y I
+.field x LTest1;
 
 .method public <init>()V
 .var 0 is this LTest; from Label0 to Label1
