@@ -1,0 +1,11 @@
+
+        type Test struct {
+            x int
+            y int
+        }
+
+        func main() {
+            const a = Test{x:3, y:4}
+            putInt(a.x)
+        }
+        

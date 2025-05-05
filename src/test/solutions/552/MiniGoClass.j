@@ -9,22 +9,35 @@ Label2:
 	new Test
 	dup
 	invokespecial Test/<init>()V
-.var 1 is a LTest; from Label2 to Label3
 	dup
 	iconst_1
 	putfield Test/x I
 	dup
 	iconst_2
 	putfield Test/y I
+	new Test
+	invokespecial Test/<init>()V
+.var 1 is a LTest; from Label2 to Label3
 	astore_1
+	new Test
+	dup
+	invokespecial Test/<init>()V
+	dup
+	iconst_3
+	putfield Test/x I
+	dup
+	iconst_4
+	putfield Test/y I
+.var 2 is b LTest; from Label2 to Label3
+	astore_2
 	aload_1
 	getfield Test/x I
 	invokestatic io/putInt(I)V
 Label3:
 Label1:
 	return
-.limit stack 5
-.limit locals 2
+.limit stack 7
+.limit locals 3
 .end method
 
 .method public <init>()V

@@ -9,13 +9,13 @@ Label2:
 	new Test
 	dup
 	invokespecial Test/<init>()V
-.var 1 is a LTest; from Label2 to Label3
 	dup
-	iconst_1
+	iconst_3
 	putfield Test/x I
 	dup
-	iconst_2
+	iconst_4
 	putfield Test/y I
+.var 1 is a LTest; from Label2 to Label3
 	astore_1
 	aload_1
 	getfield Test/x I

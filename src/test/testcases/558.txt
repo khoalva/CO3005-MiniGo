@@ -1,0 +1,17 @@
+
+        type Test struct {
+            x int
+            y int
+        }
+
+        func (a Test) foo() int {
+            return a.x + a.y
+        }
+
+        func main() {
+            var a Test
+            a.x := 5
+            a.y := 10
+            putInt(a.foo())
+        }
+        

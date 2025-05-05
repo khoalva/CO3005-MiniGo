@@ -105,8 +105,13 @@ class CodeGenerator(BaseVisitor,Utils):
                 self.emit.printout(code)
                 if type(decl.varType) is FloatType and type(exprType) is IntType:
                     self.emit.printout(self.emit.emitI2F(frame))
+                _type = decl.varType
                 
-                self.emit.printout(self.emit.emitPUTSTATIC(f"{self.className}/{decl.varName}", decl.varType, frame))
+                if decl.varType is None:
+                    _type = exprType
+                if type(_type) is Id:
+                    _type = ClassType(_type.name)
+                self.emit.printout(self.emit.emitPUTSTATIC(f"{self.className}/{decl.varName}", _type, frame))
                 
             elif isinstance(decl, ConstDecl):
                 env['isLeft'] = False
@@ -200,11 +205,14 @@ class CodeGenerator(BaseVisitor,Utils):
             temp_frame = Frame("temp", VoidType())
             env = o.copy()
             env['frame'] = temp_frame
+            _type = ast.varType
             _, varType = self.visit(ast.varInit, env)
             if ast.varType is None:
-                ast.varType = varType
-            o['env'][0].append(Symbol(ast.varName, ast.varType, CName(self.className)))
-            self.emit.printout(self.emit.emitATTRIBUTE(ast.varName, ast.varType, True, True, None))
+                _type = varType
+            if type(_type) is Id:
+                _type = ClassType(_type.name)
+            o['env'][0].append(Symbol(ast.varName, _type, CName(self.className)))
+            self.emit.printout(self.emit.emitATTRIBUTE(ast.varName, _type, True, True, None))
         else:
             frame = o['frame']
             varType = ast.varType
@@ -226,7 +234,7 @@ class CodeGenerator(BaseVisitor,Utils):
             if type(varType) is Id:
                 varType = ClassType(varType.name)
                 self.emit.printout(self.emit.emitNEW(varType, frame))
-                self.emit.printout(self.emit.emitDUP(frame))
+                # self.emit.printout(self.emit.emitDUP(frame))
                 self.emit.printout(self.emit.emitINVOKESPECIAL(frame, f"{varType.name}/<init>", MType([], VoidType())))
             o, index = self.declareVar(ast.varName, varType, o)
             self.emit.printout(self.emit.emitWRITEVAR(ast.varName, varType, index,  frame))
@@ -243,15 +251,18 @@ class CodeGenerator(BaseVisitor,Utils):
             self.emit.printout(self.emit.emitATTRIBUTE(ast.conName, conType, True, True, None))
         else:
             frame = o['frame']
-            index = frame.getNewIndex()
-            o['env'][0].append(Symbol(ast.conName, ast.conType, Index(index)))
-            self.emit.printout(self.emit.emitVAR(index, ast.conName, ast.conType, frame.getStartLabel(), frame.getEndLabel(), frame))  
+
             o['stmt'] = False
-            codegen = self.visit(ast.iniExpr, o)[0]
+            codegen, varType = self.visit(ast.iniExpr, o)
             o['stmt'] = True
+            if type(varType) is Id:
+                varType = ClassType(varType.name)
+                self.emit.printout(self.emit.emitNEW(varType, frame))
+                self.emit.printout(self.emit.emitINVOKESPECIAL(frame, f"{varType.name}/<init>", MType([], VoidType())))
+
             self.emit.printout(codegen)
-    
-            self.emit.printout(self.emit.emitWRITEVAR(ast.conName, ast.conType, index,  frame))
+            o, index = self.declareVar(ast.conName, varType, o)
+            self.emit.printout(self.emit.emitWRITEVAR(ast.conName, varType, index,  frame))
         return o
 
 
@@ -689,62 +700,48 @@ class CodeGenerator(BaseVisitor,Utils):
             lhs: LHS
             rhs: Expr
         """
-        if type(ast.rhs) is StructLiteral:
-            if type(ast.lhs) is Id:
-                code = ''
-                sym = next(filter(lambda x: x.name == ast.lhs.name, [j for i in o['env'] for j in i]),None)
-                if sym is None:
-                    varType = ClassType(ast.rhs.name)
-                    o, index = self.declareVar(ast.lhs.name, varType, o)
-                    self.emit.printout(self.emit.emitNEW(varType, o['frame']))
-                    self.emit.printout(self.emit.emitDUP(o['frame']))
-                    self.emit.printout(self.emit.emitINVOKESPECIAL(o['frame'], f"{varType.name}/<init>", MType([], VoidType())))
+       
+        o['stmt'] = False
+        codeR, typeRight = self.visit(ast.rhs, o)
+        o['stmt'] = True
+        if type(ast.lhs) is Id:
+            sym = next(filter(lambda x: x.name == ast.lhs.name, [j for i in o['env'] for j in i]),None)
+            if sym is None:
+                o, index = self.declareVar(ast.lhs.name, typeRight, o)
 
-                o['isLeft'] = True    
-                codeL, typeLeft = self.visit(ast.lhs, o)
-                o['isLeft'] = False
-                self.emit.printout(codeL)
-                codeL, typeLeft = self.visit(ast.lhs, o)
-                for ele in ast.rhs.elements:
-                    code += codeL
-                    o['stmt'] = False
-                    codeR, typeRight = self.visit(ele[1], o)
-                    o['stmt'] = True
-                    code += codeR
-                    code += self.emit.emitPUTFIELD(f"{ast.rhs.name}/{ele[0]}", typeRight, o['frame'])
-                self.emit.printout(code)
-            return o
-
+            o['isLeft'] = True
+            codeL, typeLeft = self.visit(ast.lhs, o)
+            o['isLeft'] = False
+            self.emit.printout(codeR + codeL)
+        elif type(ast.lhs) is FieldAccess:
+            self.emit.printout(self.visit(ast.lhs.receiver, o)[0])
+            o['isLeft'] = True
+            codeL = self.visit(ast.lhs, o)
+            o['isLeft'] = False
+            self.emit.printout(codeR + codeL)
         else:
-            o['stmt'] = False
-            codeR, typeRight = self.visit(ast.rhs, o)
-            o['stmt'] = True
-            if type(ast.lhs) is Id:
-                sym = next(filter(lambda x: x.name == ast.lhs.name, [j for i in o['env'] for j in i]),None)
-                if sym is None:
-                    o, index = self.declareVar(ast.lhs.name, typeRight, o)
-
-                o['isLeft'] = True
-                codeL, typeLeft = self.visit(ast.lhs, o)
-                o['isLeft'] = False
-                self.emit.printout(codeR + codeL)
-            elif type(ast.lhs) is FieldAccess:
-                self.emit.printout(self.visit(ast.lhs.receiver, o)[0])
-                o['isLeft'] = True
-                codeL = self.visit(ast.lhs, o)
-                o['isLeft'] = False
-                self.emit.printout(codeR + codeL)
-            else:
-                o['isLeft'] = True
-                codeL, typeLeft = self.visit(ast.lhs, o)
-                o['isLeft'] = False
-                self.emit.printout(codeL)
-                self.emit.printout(codeR)
-                self.emit.emitASTORE(typeLeft, o['frame'])
-            return o
+            o['isLeft'] = True
+            codeL, typeLeft = self.visit(ast.lhs, o)
+            o['isLeft'] = False
+            self.emit.printout(codeL)
+            self.emit.printout(codeR)
+            self.emit.emitASTORE(typeLeft, o['frame'])
+        return o
     
     def visitStructLiteral(self, ast, o):
         codegen = ''
-        for x in ast.value:
-            codegen += self.visit(x, o)[0]
-        return codegen, ast.eleType
+        codegen += self.emit.emitNEW(ClassType(ast.name), o['frame'])
+        codegen += self.emit.emitDUP(o['frame'])
+        codegen += self.emit.emitINVOKESPECIAL(o['frame'], f"{ast.name}/<init>", MType([], VoidType()))
+        for ele in ast.elements:
+            codegen += self.emit.emitDUP(o['frame'])
+            o['stmt'] = False
+            codeR, typeRight = self.visit(ele[1], o)
+            o['stmt'] = True
+            codegen += codeR
+            codegen += self.emit.emitPUTFIELD(f"{ast.name}/{ele[0]}", typeRight, o['frame'])
+        return codegen, ClassType(ast.name)
+    
+    def visitMethodDecl(self, ast, o):
+
+        return o

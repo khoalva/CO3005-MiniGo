@@ -1,0 +1,11 @@
+
+        type Test struct {
+            x int
+            y int
+        }
+        var a Test = Test{x:1, y:2}
+        var b = Test{x:3, y:4}
+        func main() {
+            putInt(a.x)
+        }
+        
