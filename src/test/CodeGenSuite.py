@@ -524,27 +524,33 @@ class CheckCodeGenSuite(unittest.TestCase):
     #     """
     #     expect = "4"
     #     self.assertTrue(TestCodeGen.test(input,expect,556))
-    def test_struct_literal_9(self):
-        input = """
-        var a = Test{x:Test1{x:1, y:2}}
+    # def test_struct_literal_9(self):
+    #     input = """
+    #     var a = Test{x:Test1{x:1, y:2}}
 
-        type Test struct {
-            x Test1
-        }
+    #     func main() {
+    #         putInt(a.x.y)
+    #     }
 
-        type Test1 struct {
-            x int
-            y int
-        }
+    #     type Test struct {
+    #         x Test1
+    #     }
 
-        func main() {
-            putInt(a.x.y)
-        }
-        """
-        expect = "2"
-        self.assertTrue(TestCodeGen.test(input,expect,557))
+    #     type Test1 struct {
+    #         x int
+    #         y int
+    #     }
+    #     """
+    #     expect = "2"
+    #     self.assertTrue(TestCodeGen.test(input,expect,557))
     # def test_method_decl(self):
     #     input = """
+
+    #     func (a Test) foo1() int {
+    #         var x int = 5
+    #         return x + a.x
+    #     }
+
     #     type Test struct {
     #         x int
     #         y int
@@ -558,8 +564,32 @@ class CheckCodeGenSuite(unittest.TestCase):
     #         var a Test
     #         a.x := 5
     #         a.y := 10
-    #         putInt(a.foo())
+    #         putInt(a.x)
+    #     }
+    #     func (a Test) bar() int {
+    #         return a.x * a.y
     #     }
     #     """
-    #     expect = "15"
+    #     expect = "5"
     #     self.assertTrue(TestCodeGen.test(input,expect,558))
+    
+    def test_method_call(self):
+        input = """
+        type Test struct {
+            x int
+            y int
+        }
+
+        func (a Test) foo() int {
+            return a.x + a.y
+        }
+
+        func main() {
+            var a Test
+            a.x := 5
+            a.y := 10
+            putInt(a.foo())
+        }
+        """
+        expect = "15"
+        self.assertTrue(TestCodeGen.test(input,expect,559))

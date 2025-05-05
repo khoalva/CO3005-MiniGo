@@ -1,6 +1,10 @@
 
         var a = Test{x:Test1{x:1, y:2}}
 
+        func main() {
+            putInt(a.x.y)
+        }
+
         type Test struct {
             x Test1
         }
@@ -8,9 +12,5 @@
         type Test1 struct {
             x int
             y int
-        }
-
-        func main() {
-            putInt(a.x.y)
         }
         

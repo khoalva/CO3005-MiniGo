@@ -143,17 +143,31 @@ class CodeGenerator(BaseVisitor,Utils):
         emit.printout(emit.emitENDMETHOD(frame))  
         frame.exitScope()
 
+    def acceptMethodDecl(self, ast, o):
+        sym = next(filter(lambda x: x.name == ast.recType.name, o['env'][-1]),None)
+        sym.methods.append(ast)
+        return o
     def visitProgram(self, ast, c):
         env ={}
         env['env'] = [c]
         env['isLeft'] = False
         env['stmt'] = True
+    
         self.emit.printout(self.emit.emitPROLOG(self.className, "java.lang.Object"))
-        env = reduce(lambda a,x: self.visit(x,a), ast.decl, env)
+        for x in ast.decl:
+            if type(x) is StructType:
+                env['env'][0].append(x)
+        for x in ast.decl:
+            if type(x) is MethodDecl:
+                self.acceptMethodDecl(x, env)
+        env['method'] = False
+        env = reduce(lambda a,x: self.visit(x,a) if type(x) is not MethodDecl else a, ast.decl, env)
         self.emitObjectInit()
         self.emitObjectCInit(ast, env)
         self.emit.printout(self.emit.emitEPILOG())
         return env
+    
+
     def declareVar(self, name, _type, o):
         """
         Khai báo biến trong môi trường hiện tại.
@@ -177,8 +191,13 @@ class CodeGenerator(BaseVisitor,Utils):
         o['env'][0].append(Symbol(ast.name, mtype, CName(self.className)))
         env = o.copy()
         env['frame'] = frame
-        self.emit.printout(self.emit.emitMETHOD(ast.name, mtype,True, frame))
+        if env['method']:
+            self.emit.printout(self.emit.emitMETHOD(ast.name, mtype,False, frame))
+        else:
+            self.emit.printout(self.emit.emitMETHOD(ast.name, mtype,True, frame))
         frame.enterScope(True)
+        if env['method']:
+            frame.getNewIndex()
         self.emit.printout(self.emit.emitLABEL(frame.getStartLabel(), frame))
         env['env'] = [[]] + env['env']
         if isMain:
@@ -231,12 +250,18 @@ class CodeGenerator(BaseVisitor,Utils):
                 elif type(ast.varType) is BoolType:
                     self.emit.printout(self.emit.emitPUSHICONST(0, frame))
 
-            if type(varType) is Id:
+            if type(varType) is Id and ast.varInit:
                 varType = ClassType(varType.name)
                 self.emit.printout(self.emit.emitNEW(varType, frame))
                 # self.emit.printout(self.emit.emitDUP(frame))
                 self.emit.printout(self.emit.emitINVOKESPECIAL(frame, f"{varType.name}/<init>", MType([], VoidType())))
+            elif type(varType) is Id and not ast.varInit:
+                varType = ClassType(varType.name)
+                self.emit.printout(self.emit.emitNEW(varType, frame))
+                self.emit.printout(self.emit.emitDUP(frame))
+                self.emit.printout(self.emit.emitINVOKESPECIAL(frame, f"{varType.name}/<init>", MType([], VoidType())))
             o, index = self.declareVar(ast.varName, varType, o)
+            
             self.emit.printout(self.emit.emitWRITEVAR(ast.varName, varType, index,  frame))
         return o
     
@@ -387,8 +412,6 @@ class CodeGenerator(BaseVisitor,Utils):
             new_dimens = arrType.dimens[len(ast.idx):]
             return codegen, ArrayType(new_dimens, arrType.eleType)
         
-    def visitStructLiteral(self, ast, o):
-        pass
     def visitBinaryOp(self, ast, o):
         codegen = ''
         result = None
@@ -619,23 +642,29 @@ class CodeGenerator(BaseVisitor,Utils):
         return o
     
     def visitStructType(self, ast, o):
+        env = o.copy()
         emit = Emitter(self.path + "/" + ast.name + ".j")
-
-        emit.printout(self.emit.emitPROLOG(ast.name, "java.lang.Object"))
+        tempEmit = self.emit
+        self.emit = emit
+        self.emit.printout(self.emit.emitPROLOG(ast.name, "java.lang.Object"))
         
         for x in ast.elements:
             if type(x[1]) is Id:
                 eleType = ClassType(x[1].name)
             else:
                 eleType = x[1]
-            emit.printout(self.emit.emitATTRIBUTE(x[0],eleType,False,False, None))
+            self.emit.printout(self.emit.emitATTRIBUTE(x[0],eleType,False,False, None))
         temp = self.className
         self.className = ast.name
-        self._emitObjectInit(emit, ast.name)
-        self.className = temp
-        # self.emitObjectCInit(ast, o)
+        self.emitObjectInit()
+        env['method'] = True
+        for x in ast.methods:
+            self.visit(x,env)
+        env['method'] = False
         emit.emitEPILOG()
-        o['env'][0].append(ast)
+        self.className = temp
+        self.emit = tempEmit
+
         return o
     
     def visitFieldAccess(self, ast, o):
@@ -744,4 +773,36 @@ class CodeGenerator(BaseVisitor,Utils):
     
     def visitMethodDecl(self, ast, o):
 
+        env = o.copy()
+        env['frame'] = Frame("Method", ast.recType)
+        env['frame'].enterScope(True)
+        env['env'] = [[]] + env['env']
+        _type = ast.recType
+        if type(_type) is Id:
+            _type = ClassType(_type.name)
+        index = env['frame'].getNewIndex()
+        env['env'][0].append(Symbol(ast.receiver, _type, Index(index)))
+       
+        self.visit(ast.fun, env)
+        env['frame'].exitScope()
         return o
+
+    def visitMethCall(self, ast, o):
+        codegen = ''
+        if type(ast.receiver) is Id:
+            sym = next(filter(lambda x: x.name == ast.metName, [j for i in o['env'] for j in i]),None)
+            env = o.copy()
+            env['isLeft'] = False
+            env['stmt'] = False
+            [self.emit.printout(self.visit(x, env)[0]) for x in ast.args]
+            env['stmt'] = True
+            codegen += self.emit.emitINVOKEVIRTUAL(f"/{ast.metName}",sym.mtype, o['frame'])
+        else:
+            codegen += self.visit(ast.obj, o)[0]
+            env = o.copy()
+            env['isLeft'] = False
+            env['stmt'] = False
+            [self.emit.printout(self.visit(x, env)[0]) for x in ast.args]
+            env['stmt'] = True
+            codegen += self.emit.emitINVOKEVIRTUAL(f"{ast.obj.name}/{ast.method.name}",sym.mtype, o['frame'])
+        return codegen, sym.mtype.rettype

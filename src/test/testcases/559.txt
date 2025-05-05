@@ -1,10 +1,4 @@
 
-
-        func (a Test) foo1() int {
-            var x int = 5
-            return x + a.x
-        }
-
         type Test struct {
             x int
             y int
@@ -14,14 +8,10 @@
             return a.x + a.y
         }
 
-
         func main() {
             var a Test
             a.x := 5
             a.y := 10
-            putInt(a.x)
-        }
-        func (a Test) bar() int {
-            return a.x * a.y
+            putInt(a.foo())
         }
         
