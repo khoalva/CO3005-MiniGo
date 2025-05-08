@@ -546,9 +546,9 @@ class CheckCodeGenSuite(unittest.TestCase):
     # def test_method_decl(self):
     #     input = """
 
-    #     func (a Test) foo1() int {
+    #     func (b Test) foo1() int {
     #         var x int = 5
-    #         return x + a.x
+    #         return x + b.x
     #     }
 
     #     type Test struct {
@@ -572,24 +572,140 @@ class CheckCodeGenSuite(unittest.TestCase):
     #     """
     #     expect = "5"
     #     self.assertTrue(TestCodeGen.test(input,expect,558))
+    # def test_method_call(self):
+    #     input = """
+    #     type Test struct {
+    #         x int
+    #         y int
+    #     }
+
+    #     func (a Test) NewTest(x int, y int)  {
+    #         a.x := x
+    #         a.y := y
+    #     }
+
+    #     func main() {
+    #         var a Test
+    #         a.NewTest(2, 3)
+    #         putInt(a.x)
+    #     }
+    #     """
+    #     expect = "2"
+    #     self.assertTrue(TestCodeGen.test(input,expect,559))
+    # def test_method_call_2(self):
+    #     input = """
+    #     type Test struct {
+    #         x int
+    #         y int
+    #     }
+
+    #     func (a Test) foo() int {
+    #         return a.x + a.y
+    #     }
+
+    #     func main() {
+    #         var a Test
+    #         a.x := 5
+    #         a.y := 10
+    #         putInt(a.foo())
+    #     }
+    #     """
+    #     expect = "15"
+    #     self.assertTrue(TestCodeGen.test(input,expect,560))
+    # def test_method_call_3(self):
+    #     input = """
+    #     type Test struct {
+    #         x int
+    #         y int
+    #     }
+
+    #     func (a Test) foo(m int, n int) int {
+    #         return a.x + a.y + m + n 
+    #     }
+
+    #     func main() {
+    #         var a Test
+    #         a.x := -1
+    #         a.y := 11
+    #         putInt(a.foo(100, 1000))
+    #     }
+    #     """
+    #     expect = "1110"
+    #     self.assertTrue(TestCodeGen.test(input,expect,560))
+    # def test_array_cell(self):
+    #     input = """
+
+
+    #     func main() {
+    #         a := [3]int{1,2,3}
+    #         putInt(a[0])
+    #     """
+    #     expect = "1"
+    #     self.assertTrue(TestCodeGen.test(input,expect,561))
     
-    def test_method_call(self):
+    # def test_array_cell_2(self):
+    #     input = """
+    #     func main() {
+    #         a := [3][2]int{{1,2},{3,4},{5,6}}
+    #         putInt(a[2][1])
+    #     }
+    #     """
+    #     expect = "6"
+    #     self.assertTrue(TestCodeGen.test(input,expect,562))
+    
+    # def test_array_cell_3(self):
+    #     input = """
+    #     func main() {
+    #         a := [3][2]int{{1,2},{3,4},{5,6}}
+    #         a[2][1] := 10
+    #         putInt(a[2][1])
+    #     }
+    #     """
+    #     expect = "10"
+    #     self.assertTrue(TestCodeGen.test(input,expect,563))
+    
+    def test_array_cell_4(self):
         input = """
-        type Test struct {
-            x int
-            y int
+        func foo() [3][2]int {
+            return [3][2]int{{1,2},{3,4},{5,6}}
         }
 
-        func (a Test) foo() int {
-            return a.x + a.y
+        func main() {
+            putInt(foo()[2][1])
+        }
+        """
+        expect = "10"
+        self.assertTrue(TestCodeGen.test(input,expect,564))
+    
+    def test_array_cell_5(self):
+        input = """
+        type Test struct {
+            x [3][2]int
         }
 
         func main() {
             var a Test
-            a.x := 5
-            a.y := 10
-            putInt(a.foo())
+            a.x := [3][2]int{{1,2},{3,4},{5,6}}
+            putInt(a.x[2][1])
         }
         """
-        expect = "15"
-        self.assertTrue(TestCodeGen.test(input,expect,559))
+        expect = "6"
+        self.assertTrue(TestCodeGen.test(input,expect,565))
+
+    def test_array_cell_6(self):
+        input = """
+        type Test struct {
+            x [3][2]int
+        }
+        func (a Test) foo() int {
+            return a.x
+        }
+
+        func main() {
+            var a Test
+            a.x := [3][2]int{{1,2},{3,4},{5,6}}
+            putInt(a.foo()[2][1])
+        }
+        """
+        expect = "6"
+        self.assertTrue(TestCodeGen.test(input,expect,565))

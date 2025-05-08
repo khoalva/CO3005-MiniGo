@@ -15,20 +15,23 @@ Label1:
 .limit locals 1
 .end method
 
-.method public NewTest(II)V
+.method public foo(II)I
 Label0:
-.var 1 is x I from Label0 to Label1
-.var 2 is y I from Label0 to Label1
+.var 1 is m I from Label0 to Label1
+.var 2 is n I from Label0 to Label1
 Label2:
 	aload_0
-	iload_1
-	putfield Test/x I
+	getfield Test/x I
 	aload_0
+	getfield Test/y I
+	iadd
+	iload_1
+	iadd
 	iload_2
-	putfield Test/y I
+	iadd
+	ireturn
 Label3:
 Label1:
-	return
 .limit stack 2
 .limit locals 3
 .end method

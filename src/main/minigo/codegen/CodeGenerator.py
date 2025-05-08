@@ -388,29 +388,54 @@ class CodeGenerator(BaseVisitor,Utils):
             codegen += self.reduceList(ast.value, ast.eleType, o)[0]
         else:
             codegen += self.reduceNestedList(ast.value, ArrayType(dimens=ast.dimens, eleType=ast.eleType), ast.eleType, o)[0]
-        return codegen, ast.eleType
+        return codegen, ArrayType(ast.dimens, ast.eleType)
   
     def visitArrayCell(self, ast, o):
-        codegen, arrType = self.visit(ast.arr, o)
+        if o['isLeft']:
 
-        # Xác định kiểu trả về
-        remaining_dims = len(arrType.dimens) - len(ast.idx)
-        if remaining_dims == 0:
-            for i in range(len(arrType.dimens)-1):
-                codegen += self.visit(ast.idx[i], o)[0]
-                codegen += self.emit.emitALOAD(ArrayType(arrType.dimens, arrType.eleType), o['frame'])
-            codegen += self.visit(ast.idx[-1], o)[0]
-            codegen += self.emit.emitALOAD(arrType.eleType, o['frame'])
-            # Truy cập đến phần tử cuối cùng
-            return codegen, arrType.eleType
+            o['isLeft'] = False
+            codegen, arrType = self.visit(ast.arr, o)
+            o['isLeft'] = True
+            # Xác định kiểu trả về
+            remaining_dims = len(arrType.dimens) - len(ast.idx)
+            if remaining_dims == 0:
+                for i in range(len(arrType.dimens)-1):
+                    codegen += self.visit(ast.idx[i], o)[0]
+                    codegen += self.emit.emitALOAD(ArrayType(arrType.dimens, arrType.eleType), o['frame'])
+                codegen += self.visit(ast.idx[-1], o)[0]
+                # Truy cập đến phần tử cuối cùng
+                return codegen, arrType
+            # else:
+            #     for i in range(len(arrType.dimens) - remaining_dims):
+            #         codegen += self.visit(ast.idx[i], o)[0]
+            #         codegen += self.emit.emitALOAD(ArrayType(arrType.dimens, arrType.eleType), o['frame'])
+
+            #     # Trả về mảng với số chiều còn lại
+            #     new_dimens = arrType.dimens[len(ast.idx):]
+            #     return codegen, ArrayType(new_dimens, arrType.eleType)
+
+
         else:
-            for i in range(len(arrType.dimens) - remaining_dims):
-                codegen += self.visit(ast.idx[i], o)[0]
-                codegen += self.emit.emitALOAD(ArrayType(arrType.dimens, arrType.eleType), o['frame'])
+            codegen, arrType = self.visit(ast.arr, o)
+            # Xác định kiểu trả về
+            remaining_dims = len(arrType.dimens) - len(ast.idx)
+            if remaining_dims == 0:
+                for i in range(len(arrType.dimens)-1):
+                    codegen += self.visit(ast.idx[i], o)[0]
+                    codegen += self.emit.emitALOAD(ArrayType(arrType.dimens, arrType.eleType), o['frame'])
+                
+                codegen += self.visit(ast.idx[-1], o)[0]
+                codegen += self.emit.emitALOAD(arrType.eleType, o['frame'])
+                # Truy cập đến phần tử cuối cùng
+                return codegen, arrType.eleType
+            # else:
+            #     for i in range(len(arrType.dimens) - remaining_dims):
+            #         codegen += self.visit(ast.idx[i], o)[0]
+            #         codegen += self.emit.emitALOAD(ArrayType(arrType.dimens, arrType.eleType), o['frame'])
 
-            # Trả về mảng với số chiều còn lại
-            new_dimens = arrType.dimens[len(ast.idx):]
-            return codegen, ArrayType(new_dimens, arrType.eleType)
+            #     # Trả về mảng với số chiều còn lại
+            #     new_dimens = arrType.dimens[len(ast.idx):]
+            #     return codegen, ArrayType(new_dimens, arrType.eleType)
         
     def visitBinaryOp(self, ast, o):
         codegen = ''
@@ -737,7 +762,6 @@ class CodeGenerator(BaseVisitor,Utils):
             sym = next(filter(lambda x: x.name == ast.lhs.name, [j for i in o['env'] for j in i]),None)
             if sym is None:
                 o, index = self.declareVar(ast.lhs.name, typeRight, o)
-
             o['isLeft'] = True
             codeL, typeLeft = self.visit(ast.lhs, o)
             o['isLeft'] = False
@@ -748,6 +772,14 @@ class CodeGenerator(BaseVisitor,Utils):
             codeL = self.visit(ast.lhs, o)
             o['isLeft'] = False
             self.emit.printout(codeR + codeL)
+        elif type(ast.lhs) is ArrayCell:
+            o['isLeft'] = True
+            codegen, arrType = self.visit(ast.lhs, o)
+            o['isLeft'] = False
+            self.emit.printout(codegen)
+            codeR,eleType = self.visit(ast.rhs, o)
+            self.emit.printout(codeR)
+            self.emit.printout(self.emit.emitASTORE(eleType, o['frame']))
         else:
             o['isLeft'] = True
             codeL, typeLeft = self.visit(ast.lhs, o)
@@ -788,21 +820,35 @@ class CodeGenerator(BaseVisitor,Utils):
         return o
 
     def visitMethCall(self, ast, o):
-        codegen = ''
-        if type(ast.receiver) is Id:
-            sym = next(filter(lambda x: x.name == ast.metName, [j for i in o['env'] for j in i]),None)
-            env = o.copy()
-            env['isLeft'] = False
-            env['stmt'] = False
-            [self.emit.printout(self.visit(x, env)[0]) for x in ast.args]
-            env['stmt'] = True
-            codegen += self.emit.emitINVOKEVIRTUAL(f"/{ast.metName}",sym.mtype, o['frame'])
+        if o['stmt']:
+            
+            return o
         else:
-            codegen += self.visit(ast.obj, o)[0]
-            env = o.copy()
-            env['isLeft'] = False
-            env['stmt'] = False
-            [self.emit.printout(self.visit(x, env)[0]) for x in ast.args]
-            env['stmt'] = True
-            codegen += self.emit.emitINVOKEVIRTUAL(f"{ast.obj.name}/{ast.method.name}",sym.mtype, o['frame'])
-        return codegen, sym.mtype.rettype
+            codegen = ''
+            _type = None
+            if type(ast.receiver) is Id:
+                sym_var = next(filter(lambda x: x.name == ast.receiver.name, [j for i in o['env'] for j in i]),None)
+                sym_struct = next(filter(lambda x: x.name == sym_var.mtype.name, o['env'][-1]),None)
+                method = next(filter(lambda x: x.fun.name == ast.metName, sym_struct.methods),None)
+                env = o.copy()
+                env['isLeft'] = False
+                env['stmt'] = False
+                args = []
+                for x in ast.args:
+                    code, arg_type = self.visit(x, env)
+                    args.append(arg_type)
+                    codegen += code
+
+                env['stmt'] = True
+                _type = method.fun.retType
+                codegen += self.visit(ast.receiver, o)[0]
+                codegen += self.emit.emitINVOKEVIRTUAL(f"{sym_struct.name}/{ast.metName}",MType(args,_type), o['frame'])
+            else:
+                codegen += self.visit(ast.receiver, o)[0]
+                env = o.copy()
+                env['isLeft'] = False
+                env['stmt'] = False
+                [self.emit.printout(self.visit(x, env)[0]) for x in ast.args]
+                env['stmt'] = True
+                codegen += self.emit.emitINVOKEVIRTUAL(f"{ast.obj.name}/{ast.method.name}",None, o['frame'])
+            return codegen, _type

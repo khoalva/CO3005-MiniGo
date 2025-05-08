@@ -12,12 +12,59 @@ Label2:
 .var 1 is a LTest; from Label2 to Label3
 	astore_1
 	aload_1
-	getfield Test/x I
+	iconst_3
+	anewarray [I
+	dup
+	iconst_0
+	iconst_2
+	newarray int
+	dup
+	iconst_0
+	iconst_1
+	iastore
+	dup
+	iconst_1
+	iconst_2
+	iastore
+	aastore
+	dup
+	iconst_1
+	iconst_2
+	newarray int
+	dup
+	iconst_0
+	iconst_3
+	iastore
+	dup
+	iconst_1
+	iconst_4
+	iastore
+	aastore
+	dup
+	iconst_2
+	iconst_2
+	newarray int
+	dup
+	iconst_0
+	iconst_5
+	iastore
+	dup
+	iconst_1
+	bipush 6
+	iastore
+	aastore
+	putfield Test/x [I
+	aload_1
+	getfield Test/x [I
+	iconst_2
+	aaload
+	iconst_1
+	iaload
 	invokestatic io/putInt(I)V
 Label3:
 Label1:
 	return
-.limit stack 2
+.limit stack 17
 .limit locals 2
 .end method
 

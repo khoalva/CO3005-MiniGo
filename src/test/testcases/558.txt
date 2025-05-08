@@ -1,8 +1,8 @@
 
 
-        func (a Test) foo1() int {
+        func (b Test) foo1() int {
             var x int = 5
-            return x + a.x
+            return x + b.x
         }
 
         type Test struct {
@@ -13,7 +13,6 @@
         func (a Test) foo() int {
             return a.x + a.y
         }
-
 
         func main() {
             var a Test

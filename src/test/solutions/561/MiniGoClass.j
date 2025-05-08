@@ -6,18 +6,30 @@
 Label0:
 .var 0 is args [Ljava/lang/String; from Label0 to Label1
 Label2:
-	new Test
+.var 1 is a [I from Label2 to Label3
+	iconst_3
+	newarray int
 	dup
-	invokespecial Test/<init>()V
-.var 1 is a LTest; from Label2 to Label3
+	iconst_0
+	iconst_1
+	iastore
+	dup
+	iconst_1
+	iconst_2
+	iastore
+	dup
+	iconst_2
+	iconst_3
+	iastore
 	astore_1
 	aload_1
-	getfield Test/x I
+	iconst_0
+	iaload
 	invokestatic io/putInt(I)V
 Label3:
 Label1:
 	return
-.limit stack 2
+.limit stack 8
 .limit locals 2
 .end method
 
