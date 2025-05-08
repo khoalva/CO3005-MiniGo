@@ -155,7 +155,7 @@ class CodeGenerator(BaseVisitor,Utils):
     
         self.emit.printout(self.emit.emitPROLOG(self.className, "java.lang.Object"))
         for x in ast.decl:
-            if type(x) is StructType:
+            if type(x) is StructType or type(x) is InterfaceType:
                 env['env'][0].append(x)
         for x in ast.decl:
             if type(x) is MethodDecl:
@@ -182,6 +182,7 @@ class CodeGenerator(BaseVisitor,Utils):
         return o, index
 
     def visitFuncDecl(self, ast, o):
+
         frame = Frame(ast.name, ast.retType)
         isMain = ast.name == "main"
         if isMain:
@@ -351,18 +352,20 @@ class CodeGenerator(BaseVisitor,Utils):
             return self.emit.emitPUSHICONST(0, o['frame']), BoolType()
     
     def reduceNestedList(self, lst, arrTyp, eleTyp, o):
-        # lst: list of literals
-        # o: environment
-        # ..., arrayref -> arrayref
         codegen = ''
         if isinstance(lst[0], list):
+            # Create an ArrayType with one less dimension
+            if len(arrTyp.dimens) > 1:
+                subArrTyp = ArrayType(dimens=arrTyp.dimens[1:], eleType=arrTyp.eleType)
+            else:
+                subArrTyp = arrTyp.eleType  # Innermost array uses eleType
             codegen += self.emit.emitPUSHICONST(len(lst), o['frame'])
-            codegen += self.emit.emitNEWARRAY(arrTyp, o['frame'])
+            codegen += self.emit.emitNEWARRAY(subArrTyp, o['frame'])
             for i in range(len(lst)):
                 codegen += self.emit.emitDUP(o['frame'])
                 codegen += self.emit.emitPUSHICONST(i, o['frame'])
-                codegen += self.reduceNestedList(lst[i], arrTyp, eleTyp, o)[0]
-                codegen += self.emit.emitASTORE(arrTyp, o['frame'])
+                codegen += self.reduceNestedList(lst[i], subArrTyp, eleTyp, o)[0]
+                codegen += self.emit.emitASTORE(subArrTyp, o['frame'])
             return codegen, lst[0]
         else:
             return self.reduceList(lst, eleTyp, o)
@@ -821,7 +824,49 @@ class CodeGenerator(BaseVisitor,Utils):
 
     def visitMethCall(self, ast, o):
         if o['stmt']:
-            
+            codegen = ''
+            if type(ast.receiver) is Id:
+                # Look up the variable, struct, and method
+                sym_var = next(filter(lambda x: x.name == ast.receiver.name, [j for i in o['env'] for j in i]), None)
+                sym_struct = next(filter(lambda x: x.name == sym_var.mtype.name, o['env'][-1]), None)
+                method = next(filter(lambda x: x.fun.name == ast.metName, sym_struct.methods), None)
+
+                # Create environment for arguments (as expressions)
+                env = o.copy()
+                env['isLeft'] = False
+                env['stmt'] = False
+                
+                # Generate code for receiver
+                codegen += self.visit(ast.receiver, o)[0]
+
+                # Generate code for arguments
+                args = []
+                for x in ast.args:
+                    code, arg_type = self.visit(x, env)
+                    codegen += code
+                    args.append(arg_type)
+                
+                # Generate invokevirtual for the method
+                codegen += self.emit.emitINVOKEVIRTUAL(
+                    f"{sym_struct.name}/{ast.metName}",
+                    MType(args, method.fun.retType),
+                    o['frame']
+                )
+            else:
+                # Handle non-Id receiver (e.g., field or expression)
+                codegen += self.visit(ast.receiver, o)[0]
+                env = o.copy()
+                env['isLeft'] = False
+                env['stmt'] = False
+                for x in ast.args:
+                    code, _ = self.visit(x, env)
+                    codegen += code
+                codegen += self.emit.emitINVOKEVIRTUAL(
+                    f"{ast.obj.name}/{ast.method.name}",
+                    None,
+                    o['frame']
+                )
+            self.emit.printout(codegen)
             return o
         else:
             codegen = ''
@@ -834,6 +879,7 @@ class CodeGenerator(BaseVisitor,Utils):
                 env['isLeft'] = False
                 env['stmt'] = False
                 args = []
+                codegen += self.visit(ast.receiver, o)[0]
                 for x in ast.args:
                     code, arg_type = self.visit(x, env)
                     args.append(arg_type)
@@ -841,7 +887,7 @@ class CodeGenerator(BaseVisitor,Utils):
 
                 env['stmt'] = True
                 _type = method.fun.retType
-                codegen += self.visit(ast.receiver, o)[0]
+                
                 codegen += self.emit.emitINVOKEVIRTUAL(f"{sym_struct.name}/{ast.metName}",MType(args,_type), o['frame'])
             else:
                 codegen += self.visit(ast.receiver, o)[0]
@@ -852,3 +898,31 @@ class CodeGenerator(BaseVisitor,Utils):
                 env['stmt'] = True
                 codegen += self.emit.emitINVOKEVIRTUAL(f"{ast.obj.name}/{ast.method.name}",None, o['frame'])
             return codegen, _type
+    
+    def visitInterfaceType(self, ast, o):
+        """
+            name: str
+            methods: List[Prototype]
+        """
+        # Khai báo lớp interface
+        interface_name = ast.name
+        self.emit.printout(self.emit.emitPROLOG(interface_name, "java/lang/Object"))
+        jasmin_code = ''
+        
+        # Tạo mã Jasmin cho từng phương thức trong interface
+        for method in ast.methods:
+            jasmin_code += self.visitPrototype(method, o)
+        
+        self.emit.printout(jasmin_code)
+        return o
+    
+    def visitPrototype(self, ast, o):
+        """
+            name: str
+            params: List[VarDecl]
+            retType: Type
+        """
+
+        self.emit.printout(self.emit.emitMETHOD(ast.name,ast.params,ast.retType,True,o['frame']))
+ 
+        return o

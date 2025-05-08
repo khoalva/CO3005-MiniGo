@@ -6,13 +6,11 @@
 Label0:
 .var 0 is args [Ljava/lang/String; from Label0 to Label1
 Label2:
-.var 1 is a Ljava/lang/String; from Label2 to Label3
-.var 1 is a Ljava/lang/String; from Label2 to Label3
 	ldc "Hello "
+.var 1 is a Ljava/lang/String; from Label2 to Label3
 	astore_1
-.var 2 is b Ljava/lang/String; from Label2 to Label3
-.var 2 is b Ljava/lang/String; from Label2 to Label3
 	ldc "World!"
+.var 2 is b Ljava/lang/String; from Label2 to Label3
 	astore_2
 	aload_1
 	aload_2

@@ -35,16 +35,14 @@ Label1:
 Label0:
 .var 0 is args [Ljava/lang/String; from Label0 to Label1
 Label2:
-.var 1 is a I from Label2 to Label3
-.var 1 is a I from Label2 to Label3
 	iconst_5
 	invokestatic MiniGoClass/foo1(I)I
+.var 1 is a I from Label2 to Label3
 	istore_1
-.var 2 is b I from Label2 to Label3
-.var 2 is b I from Label2 to Label3
 	iload_1
 	bipush 10
 	invokestatic MiniGoClass/foo2(II)I
+.var 2 is b I from Label2 to Label3
 	istore_2
 	iload_2
 	invokestatic io/putInt(I)V

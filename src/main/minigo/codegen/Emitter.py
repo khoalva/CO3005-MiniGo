@@ -25,7 +25,7 @@ class Emitter():
         elif typeIn is BoolType:
             return "Z"
         elif typeIn is ArrayType:
-            return "[" + self.getJVMType(inType.eleType)
+            return "[" * len(inType.dimens) + self.getJVMType(inType.eleType)
         elif typeIn is MType:
             return "(" + "".join(list(map(lambda x: self.getJVMType(x), inType.partype))) + ")" + self.getJVMType(inType.rettype)
         elif typeIn is cgen.ClassType:
@@ -662,6 +662,18 @@ class Emitter():
         #frame: Frame
 
         if type(in_) is IntType:
+            frame.pop()
+            return self.jvm.emitIRETURN()
+        elif type(in_) is FloatType:
+            frame.pop()
+            return self.jvm.emitFRETURN()
+        elif type(in_) is cgen.ClassType or type(in_) is StringType:
+            frame.pop()
+            return self.jvm.emitARETURN()
+        elif type(in_) is ArrayType:
+            frame.pop()
+            return self.jvm.emitARETURN()
+        elif type(in_) is BoolType:
             frame.pop()
             return self.jvm.emitIRETURN()
         elif type(in_) is VoidType:

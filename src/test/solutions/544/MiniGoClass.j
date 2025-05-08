@@ -6,7 +6,9 @@
 Label0:
 .var 0 is args [Ljava/lang/String; from Label0 to Label1
 Label2:
-	aconst_null
+	new Test
+	dup
+	invokespecial Test/<init>()V
 .var 1 is a LTest; from Label2 to Label3
 	astore_1
 	iconst_1

@@ -1,8 +1,8 @@
 .source MiniGoClass.java
 .class public MiniGoClass
 .super java.lang.Object
-.field static a I
-.field static b I
+.field static final a I
+.field static final b I
 
 .method public static main([Ljava/lang/String;)V
 Label0:

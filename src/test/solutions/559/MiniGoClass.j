@@ -12,12 +12,16 @@ Label2:
 .var 1 is a LTest; from Label2 to Label3
 	astore_1
 	aload_1
+	iconst_2
+	iconst_3
+	invokevirtual Test/NewTest(II)V
+	aload_1
 	getfield Test/x I
 	invokestatic io/putInt(I)V
 Label3:
 Label1:
 	return
-.limit stack 2
+.limit stack 5
 .limit locals 2
 .end method
 

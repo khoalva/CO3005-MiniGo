@@ -53,9 +53,9 @@ Label2:
 	bipush 6
 	iastore
 	aastore
-	putfield Test/x [I
+	putfield Test/x [[I
 	aload_1
-	getfield Test/x [I
+	getfield Test/x [[I
 	iconst_2
 	aaload
 	iconst_1

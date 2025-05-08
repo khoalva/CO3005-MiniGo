@@ -6,10 +6,10 @@
 Label0:
 .var 0 is args [Ljava/lang/String; from Label0 to Label1
 Label2:
+.var 1 is a LTest; from Label2 to Label3
 	new Test
 	dup
 	invokespecial Test/<init>()V
-.var 1 is a LTest; from Label2 to Label3
 	dup
 	iconst_1
 	putfield Test/x I

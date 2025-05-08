@@ -6,33 +6,65 @@
 Label0:
 .var 0 is args [Ljava/lang/String; from Label0 to Label1
 Label2:
+	new Test
+	dup
+	invokespecial Test/<init>()V
+.var 1 is a LTest; from Label2 to Label3
+	astore_1
+	aload_1
+	iconst_3
+	anewarray [I
+	dup
+	iconst_0
+	iconst_2
+	newarray int
+	dup
+	iconst_0
+	iconst_1
+	iastore
+	dup
+	iconst_1
+	iconst_2
+	iastore
+	aastore
+	dup
+	iconst_1
+	iconst_2
+	newarray int
+	dup
+	iconst_0
+	iconst_3
+	iastore
+	dup
+	iconst_1
+	iconst_4
+	iastore
+	aastore
+	dup
+	iconst_2
+	iconst_2
+	newarray int
+	dup
+	iconst_0
 	iconst_5
-.var 1 is a I from Label2 to Label3
-	istore_1
-	iload_1
-	bipush 10
-	if_icmpne Label6
+	iastore
+	dup
 	iconst_1
-	goto Label7
-Label6:
-	iconst_0
-Label7:
-	ifle Label4
-Label8:
+	bipush 6
+	iastore
+	aastore
+	putfield Test/x [[I
+	aload_1
+	invokevirtual Test/foo()[[I
+	iconst_2
+	aaload
 	iconst_1
+	iaload
 	invokestatic io/putInt(I)V
-Label9:
-	goto Label5
-Label4:
-Label10:
-	iconst_0
-	invokestatic io/putInt(I)V
-Label11:
-Label5:
 Label3:
 Label1:
 	return
-.limit stack 7
+.limit stack 17
 .limit locals 2
 .end method
 

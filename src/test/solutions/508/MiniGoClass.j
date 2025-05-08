@@ -6,8 +6,6 @@
 Label0:
 .var 0 is args [Ljava/lang/String; from Label0 to Label1
 Label2:
-.var 1 is a [I from Label2 to Label3
-.var 1 is a [I from Label2 to Label3
 	iconst_2
 	anewarray [I
 	dup
@@ -36,6 +34,7 @@ Label2:
 	iconst_4
 	iastore
 	aastore
+.var 1 is a [[I from Label2 to Label3
 	astore_1
 	aload_1
 	iconst_1

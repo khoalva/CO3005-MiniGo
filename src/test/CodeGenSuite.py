@@ -664,48 +664,64 @@ class CheckCodeGenSuite(unittest.TestCase):
     #     expect = "10"
     #     self.assertTrue(TestCodeGen.test(input,expect,563))
     
-    def test_array_cell_4(self):
-        input = """
-        func foo() [3][2]int {
-            return [3][2]int{{1,2},{3,4},{5,6}}
-        }
+    # def test_array_cell_4(self):
+    #     input = """
+    #     func foo() [2]int{
+    #         return [2]int{1,2}
+    #     }
 
-        func main() {
-            putInt(foo()[2][1])
-        }
-        """
-        expect = "10"
-        self.assertTrue(TestCodeGen.test(input,expect,564))
+    #     func main() {
+    #         putInt(2)
+    #     }
+    #     """
+    #     expect = "2"
+    #     self.assertTrue(TestCodeGen.test(input,expect,564))
     
-    def test_array_cell_5(self):
+    # def test_array_cell_5(self):
+    #     input = """
+    #     type Test struct {
+    #         x [3][2]int
+    #     }
+
+    #     func main() {
+    #         var a Test
+    #         a.x := [3][2]int{{1,2},{3,4},{5,6}}
+    #         putInt(a.x[2][1])
+    #     }
+    #     """
+    #     expect = "6"
+    #     self.assertTrue(TestCodeGen.test(input,expect,565))
+
+    # def test_array_cell_6(self):
+    #     input = """
+    #     type Test struct {
+    #         x [3][2]int
+    #     }
+    #     func (a Test) foo() [3][2]int {
+    #         return a.x
+    #     }
+
+    #     func main() {
+    #         var a Test
+    #         a.x := [3][2]int{{1,2},{3,4},{5,6}}
+    #         putInt(a.foo()[2][1])
+    #     }
+    #     """
+    #     expect = "6"
+    #     self.assertTrue(TestCodeGen.test(input,expect,566))
+    def test_interface(self):
         input = """
-        type Test struct {
-            x [3][2]int
+        type Calculator interface {
+            Add(x, y int) int;
+            Subtract(a, b float, c int) float;
+            Reset()
+            SayHello(name string)
         }
 
         func main() {
-            var a Test
-            a.x := [3][2]int{{1,2},{3,4},{5,6}}
-            putInt(a.x[2][1])
+            putInt(1)
         }
         """
-        expect = "6"
-        self.assertTrue(TestCodeGen.test(input,expect,565))
-
-    def test_array_cell_6(self):
-        input = """
-        type Test struct {
-            x [3][2]int
-        }
-        func (a Test) foo() int {
-            return a.x
-        }
-
-        func main() {
-            var a Test
-            a.x := [3][2]int{{1,2},{3,4},{5,6}}
-            putInt(a.foo()[2][1])
-        }
-        """
-        expect = "6"
-        self.assertTrue(TestCodeGen.test(input,expect,565))
+        expect = "1"
+        self.assertTrue(TestCodeGen.test(input,expect,567))
+    

@@ -6,13 +6,11 @@
 Label0:
 .var 0 is args [Ljava/lang/String; from Label0 to Label1
 Label2:
-.var 1 is a I from Label2 to Label3
-.var 1 is a I from Label2 to Label3
 	iconst_0
+.var 1 is a I from Label2 to Label3
 	istore_1
-.var 2 is b I from Label2 to Label3
-.var 2 is b I from Label2 to Label3
 	iconst_5
+.var 2 is b I from Label2 to Label3
 	istore_2
 	iconst_0
 	istore_1

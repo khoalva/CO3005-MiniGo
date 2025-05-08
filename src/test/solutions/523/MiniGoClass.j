@@ -6,9 +6,8 @@
 Label0:
 .var 0 is args [Ljava/lang/String; from Label0 to Label1
 Label2:
-.var 1 is a Z from Label2 to Label3
-.var 1 is a Z from Label2 to Label3
 	iconst_1
+.var 1 is a Z from Label2 to Label3
 	istore_1
 	iload_1
 	ifgt Label4

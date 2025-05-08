@@ -18,9 +18,9 @@ Label2:
 	aload_1
 	bipush 11
 	putfield Test/y I
+	aload_1
 	bipush 100
 	sipush 1000
-	aload_1
 	invokevirtual Test/foo(II)I
 	invokestatic io/putInt(I)V
 Label3:

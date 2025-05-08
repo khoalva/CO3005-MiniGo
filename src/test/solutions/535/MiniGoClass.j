@@ -33,9 +33,8 @@ Label1:
 Label0:
 .var 0 is args [Ljava/lang/String; from Label0 to Label1
 Label2:
-.var 1 is a I from Label2 to Label3
-.var 1 is a I from Label2 to Label3
 	invokestatic MiniGoClass/foo2()I
+.var 1 is a I from Label2 to Label3
 	istore_1
 	iload_1
 	invokestatic io/putInt(I)V

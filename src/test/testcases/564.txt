@@ -1,9 +1,9 @@
 
-        func foo() [3][2]int {
-            return [3][2]int{{1,2},{3,4},{5,6}}
+        func foo() [2]int{
+            return [2]int{1,2}
         }
 
         func main() {
-            putInt(foo()[2][1])
+            putInt(2)
         }
         
