@@ -1,21 +1,11 @@
 
-        type Test2 struct {
-            z int
-        }
-        type Test1 struct {
-            y Test2
-        }
-        type Test struct {
-            x Test1
-        }
+type PPL2 struct {number int;}
+type PPL3 struct {number int; ppl PPL2;}
 
-        func main() {
-            var a Test
-            var b Test1
-            var c Test2
-            c.z := 5
-            b.y := c
-            a.x := b
-            putInt(a.x.y.z)
-        }
+func main(){
+    var a PPL3
+    a.ppl := PPL2 {number: 10}
+    a.ppl.number := 100
+   putInt(a.ppl.number)
+}
         

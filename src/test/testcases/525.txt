@@ -1,1 +1,12 @@
-func main() {var a int = 5; if (a == 10) {putInt(1);} else {putInt(0);};};
+
+        func main() {
+            var a int = 0;
+            if (false) {
+                a := 30
+            }else {
+                a := 20
+            }
+            putInt(a)
+        }
+
+    

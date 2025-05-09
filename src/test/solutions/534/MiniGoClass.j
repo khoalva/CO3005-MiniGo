@@ -2,55 +2,60 @@
 .class public MiniGoClass
 .super java.lang.Object
 
-.method public static foo1(I)I
-Label0:
-.var 0 is x I from Label0 to Label1
-Label2:
-	iload_0
-	iconst_1
-	iadd
-	ireturn
-Label3:
-Label1:
-.limit stack 3
-.limit locals 1
-.end method
-
-.method public static foo2(II)I
-Label0:
-.var 0 is x I from Label0 to Label1
-.var 1 is y I from Label0 to Label1
-Label2:
-	iload_0
-	iload_1
-	iadd
-	ireturn
-Label3:
-Label1:
-.limit stack 2
-.limit locals 2
-.end method
-
 .method public static main([Ljava/lang/String;)V
 Label0:
 .var 0 is args [Ljava/lang/String; from Label0 to Label1
 Label2:
-	iconst_5
-	invokestatic MiniGoClass/foo1(I)I
-.var 1 is a I from Label2 to Label3
+	iconst_0
+.var 1 is i I from Label2 to Label3
 	istore_1
+Label6:
+	iconst_0
+	istore_1
+Label8:
 	iload_1
-	bipush 10
-	invokestatic MiniGoClass/foo2(II)I
-.var 2 is b I from Label2 to Label3
-	istore_2
-	iload_2
+	iconst_5
+	if_icmpge Label9
+	iconst_1
+	goto Label10
+Label9:
+	iconst_0
+Label10:
+	ifle Label5
+Label11:
+	iload_1
+	iconst_2
+	irem
+	iconst_0
+	if_icmpne Label15
+	iconst_1
+	goto Label16
+Label15:
+	iconst_0
+Label16:
+	ifle Label13
+Label17:
+	goto Label4
+Label18:
+Label13:
+	iload_1
+	invokestatic io/putInt(I)V
+Label12:
+Label4:
+	iload_1
+	iconst_1
+	iadd
+	istore_1
+	goto Label8
+Label5:
+Label7:
+	iload_1
 	invokestatic io/putInt(I)V
 Label3:
 Label1:
 	return
-.limit stack 4
-.limit locals 3
+.limit stack 11
+.limit locals 2
 .end method
 
 .method public <init>()V

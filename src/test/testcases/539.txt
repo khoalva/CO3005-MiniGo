@@ -1,12 +1,7 @@
 
-        func main() {
-            var a int = 0;
-            for a < 5 {
-                a += 1;
-                if a == 3 {
-                    continue;
-                }
-                putInt(a);
-                
+            const a = "votien"
+            func main() {
+                const b = a + a
+                putString(b)
             }
-        };
+        

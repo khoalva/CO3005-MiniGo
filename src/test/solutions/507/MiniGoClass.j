@@ -6,27 +6,15 @@
 Label0:
 .var 0 is args [Ljava/lang/String; from Label0 to Label1
 Label2:
-	iconst_2
-	newarray int
-	dup
+	iconst_1
+	invokestatic io/putBoolLn(Z)V
 	iconst_0
-	iconst_1
-	iastore
-	dup
-	iconst_1
-	iconst_2
-	iastore
-.var 1 is a [I from Label2 to Label3
-	astore_1
-	aload_1
-	iconst_1
-	iaload
-	invokestatic io/putInt(I)V
+	invokestatic io/putBool(Z)V
 Label3:
 Label1:
 	return
-.limit stack 7
-.limit locals 2
+.limit stack 1
+.limit locals 1
 .end method
 
 .method public <init>()V

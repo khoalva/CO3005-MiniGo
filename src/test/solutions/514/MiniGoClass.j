@@ -6,21 +6,45 @@
 Label0:
 .var 0 is args [Ljava/lang/String; from Label0 to Label1
 Label2:
-	bipush 10
-.var 1 is a I from Label2 to Label3
-	istore_1
-	bipush 9
-.var 2 is b I from Label2 to Label3
-	istore_2
-	iload_1
-	iload_2
-	irem
+	iconst_1
+	anewarray [[I
+	dup
+	iconst_0
+	iconst_1
+	anewarray [I
+	dup
+	iconst_0
+	iconst_1
+	newarray int
+	dup
+	iconst_0
+	iconst_0
+	iastore
+	aastore
+	aastore
+.var 1 is a [[[I from Label2 to Label3
+	astore_1
+	aload_1
+	iconst_0
+	aaload
+	iconst_0
+	aaload
+	iconst_0
+	iconst_1
+	iastore
+	aload_1
+	iconst_0
+	aaload
+	iconst_0
+	aaload
+	iconst_0
+	iaload
 	invokestatic io/putInt(I)V
 Label3:
 Label1:
 	return
-.limit stack 4
-.limit locals 3
+.limit stack 15
+.limit locals 2
 .end method
 
 .method public <init>()V

@@ -1,1 +1,12 @@
-var a int = 10; func main() { putInt(a);};
+
+        func main() {
+            var b = 6.0;
+            putFloatLn(b);
+            
+            var a = true;
+            putBoolLn(a);
+            
+           
+            var c = "bao";
+            putStringLn(c);
+        }

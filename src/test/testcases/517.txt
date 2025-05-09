@@ -1,1 +1,8 @@
-func main() {var a string = "Hello "; var b string = "World!"; putString(a + b);};
+
+        func main() {
+            var a [2] int;
+            a[0] := 100
+            a[1] := a[0] + a[0]
+            putInt(a[1])
+        }
+    

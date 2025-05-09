@@ -1,10 +1,9 @@
 
-        type Test struct {
-            x int
-            y int
-        }
+        type PPL3 struct {number int;}
 
-        func main() {
-            putInt(1)
+        func main(){
+            var a PPL3 = PPL3 {number: 14}
+            a.number := 10
+            putInt(a.number)
         }
         

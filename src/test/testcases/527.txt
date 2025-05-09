@@ -1,1 +1,9 @@
-func main() {var a int = 0; for a < 5 {putInt(a); a += 1;};};
+
+func main() {
+    if (true) {
+        putBool(true)
+    } else {
+        putBool(false)     
+    }
+}
+    

@@ -1,11 +1,10 @@
 
-        func foo1(x int) int{
-            return x + 1;
-        }
-        func foo2() int{
-            return foo1(foo1(5));
-        }
-        func main() {
-            var a int = foo2();
-            putInt(a);
-        };
+            const a = 1 + 1
+            const c = 5 - a
+            func main() {
+                var b [a][c] int;
+                putInt(b[0][0]);
+                b[0][0] := 20;
+                putInt(b[0][0]);
+            }
+        

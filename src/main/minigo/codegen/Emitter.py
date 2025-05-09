@@ -129,9 +129,9 @@ class Emitter():
         if type(in_) is IntType:
             return self.jvm.emitNEWARRAY("int")
         elif type(in_) is cgen.ClassType:
-            return self.jvm.emitNEWARRAY("java/lang/Object")
+            return self.jvm.emitANEWARRAY("java/lang/Object")
         elif type(in_) is StringType:
-            return self.jvm.emitNEWARRAY("java/lang/String")
+            return self.jvm.emitANEWARRAY("java/lang/String")
         elif type(in_) is FloatType:
             return self.jvm.emitNEWARRAY("float")
         elif type(in_) is BoolType:
@@ -159,6 +159,10 @@ class Emitter():
         frame.pop()
         if type(in_) is IntType:
             return self.jvm.emitIALOAD()
+        elif type(in_) is FloatType:
+            return self.jvm.emitFALOAD()
+        elif type(in_) is BoolType:
+            return self.jvm.emitBALOAD()
         elif type(in_) is cgen.ArrayType or type(in_) is cgen.ClassType or type(in_) is StringType:
             return self.jvm.emitAALOAD()
         else:
@@ -174,6 +178,10 @@ class Emitter():
         frame.pop()
         if type(in_) is IntType:
             return self.jvm.emitIASTORE()
+        elif type(in_) is FloatType:
+            return self.jvm.emitFASTORE()
+        elif type(in_) is BoolType:
+            return self.jvm.emitBASTORE()
         elif type(in_) is cgen.ArrayType or type(in_) is cgen.ClassType or type(in_) is StringType:
             return self.jvm.emitAASTORE()
         else:
@@ -512,6 +520,25 @@ class Emitter():
             elif op == "==":
                 result.append(self.jvm.emitFCMPL())
                 result.append(self.jvm.emitIFNE(labelF))  # Nhảy nếu value1 != value2
+        elif type(in_) is StringType:
+            if op == ">":
+                result.append(self.jvm.emitINVOKEVIRTUAL("java/lang/String/compareTo", "(Ljava/lang/String;)I"))
+                result.append(self.jvm.emitIFLE(labelF))
+            elif op == ">=":
+                result.append(self.jvm.emitINVOKEVIRTUAL("java/lang/String/compareTo", "(Ljava/lang/String;)I"))
+                result.append(self.jvm.emitIFLT(labelF))
+            elif op == "<":
+                result.append(self.jvm.emitINVOKEVIRTUAL("java/lang/String/compareTo", "(Ljava/lang/String;)I"))
+                result.append(self.jvm.emitIFGE(labelF))
+            elif op == "<=":
+                result.append(self.jvm.emitINVOKEVIRTUAL("java/lang/String/compareTo", "(Ljava/lang/String;)I"))
+                result.append(self.jvm.emitIFGT(labelF))
+            elif op == "!=":
+                result.append(self.jvm.emitINVOKEVIRTUAL("java/lang/String/compareTo", "(Ljava/lang/String;)I"))
+                result.append(self.jvm.emitIFEQ(labelF))
+            elif op == "==":
+                result.append(self.jvm.emitINVOKEVIRTUAL("java/lang/String/compareTo", "(Ljava/lang/String;)I"))
+                result.append(self.jvm.emitIFNE(labelF))
         result.append(self.emitPUSHCONST("1", IntType(), frame))
         frame.pop()
         result.append(self.emitGOTO(labelO, frame))
@@ -554,13 +581,13 @@ class Emitter():
     *   @param isStatic <code>true</code> if the method is static; <code>false</code> otherwise.
     '''
 
-    def emitMETHOD(self, lexeme, in_, isStatic, frame):
+    def emitMETHOD(self, lexeme, in_, isStatic, isAbstract, frame):
         #lexeme: String
         #in_: Type
         #isStatic: Boolean
         #frame: Frame
 
-        return self.jvm.emitMETHOD(lexeme, self.getJVMType(in_), isStatic)
+        return self.jvm.emitMETHOD(lexeme, self.getJVMType(in_), isStatic, isAbstract)
 
     '''   generate the end directive for a function.
     '''
@@ -725,7 +752,7 @@ class Emitter():
         return self.jvm.emitLIMITLOCAL(num)
 
     def emitEPILOG(self):
-        file = open(self.filename, "w")    
+        file = open(self.filename, "w")  
         file.write(''.join(self.buff))
         file.close()
 

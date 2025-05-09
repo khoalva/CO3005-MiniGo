@@ -1,22 +1,15 @@
 
-        type Test2 struct {
-            z int
-        }
-        type Test1 struct {
-            y Test2
-        }
-        type Test struct {
-            x Test1
-        }
+type Study interface { study(); }
+type Play interface { play(); }
 
-        func main() {
-            var a Test
-            var b Test1
-            var c Test2
-            c.z := 5
-            b.y := c
-            a.x := b
-            a.x.y.z := 10
-            putInt(a.x.y.z)
-        }
+type PPL3 struct {number int;}
+
+func (p PPL3) study() { putInt(p.number); }
+func (p PPL3) play()  { putInt(p.number + 5); }
+
+func main() {
+    var a PPL3 = PPL3 {number: 1}
+    a.study()
+    a.play()
+}
         

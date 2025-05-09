@@ -6,51 +6,25 @@
 Label0:
 .var 0 is args [Ljava/lang/String; from Label0 to Label1
 Label2:
-	iconst_0
-.var 1 is a I from Label2 to Label3
-	istore_1
-	iconst_0
-	istore_1
-Label6:
-	iload_1
-	iconst_5
-	if_icmpge Label7
-	iconst_1
-	goto Label8
-Label7:
-	iconst_0
-Label8:
-	ifle Label5
-Label9:
-	iload_1
-	iconst_3
-	if_icmpne Label13
-	iconst_1
-	goto Label14
-Label13:
-	iconst_0
-Label14:
-	ifle Label11
-Label15:
-	goto Label4
-Label16:
-Label11:
-	iload_1
-	invokestatic io/putInt(I)V
-Label10:
-Label4:
-	iload_1
-	iconst_1
-	iadd
-	istore_1
-	goto Label6
-Label5:
-	iload_1
-	invokestatic io/putInt(I)V
+	new PPL3
+	dup
+	invokespecial PPL3/<init>()V
+	dup
+	bipush 10
+	putfield PPL3/number I
+	new PPL3
+	invokespecial PPL3/<init>()V
+.var 1 is a LPPL3; from Label2 to Label3
+	astore_1
+	aload_1
+	getfield PPL3/number I
+	invokestatic io/putIntLn(I)V
+	aload_1
+	invokevirtual PPL3/study()V
 Label3:
 Label1:
 	return
-.limit stack 11
+.limit stack 4
 .limit locals 2
 .end method
 

@@ -6,21 +6,28 @@
 Label0:
 .var 0 is args [Ljava/lang/String; from Label0 to Label1
 Label2:
-	new Test
+	aconst_null
+	new PPL3
 	dup
-	invokespecial Test/<init>()V
-.var 1 is a LTest; from Label2 to Label3
+	invokespecial PPL3/<init>()V
+.var 1 is a LPPL3; from Label2 to Label3
 	astore_1
 	aload_1
-	iconst_5
-	putfield Test/x I
+	new PPL2
+	dup
+	invokespecial PPL2/<init>()V
+	dup
+	bipush 10
+	putfield PPL2/number I
+	putfield PPL3/ppl LPPL2;
 	aload_1
-	getfield Test/x I
+	getfield PPL3/ppl LPPL2;
+	getfield PPL2/number I
 	invokestatic io/putInt(I)V
 Label3:
 Label1:
 	return
-.limit stack 3
+.limit stack 5
 .limit locals 2
 .end method
 

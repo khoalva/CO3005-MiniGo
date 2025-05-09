@@ -6,34 +6,24 @@
 Label0:
 .var 0 is args [Ljava/lang/String; from Label0 to Label1
 Label2:
-	iconst_0
-.var 1 is a I from Label2 to Label3
-	istore_1
-Label4:
-	iload_1
-	iconst_5
-	if_icmpge Label6
 	iconst_1
-	goto Label7
+	ifle Label4
 Label6:
-	iconst_0
-Label7:
-	ifle Label5
-Label8:
-	iload_1
-	invokestatic io/putInt(I)V
-	iload_1
 	iconst_1
-	iadd
-	istore_1
+	invokestatic io/putBool(Z)V
+Label7:
+	goto Label5
+Label4:
+Label8:
+	iconst_0
+	invokestatic io/putBool(Z)V
 Label9:
-	goto Label4
 Label5:
 Label3:
 Label1:
 	return
-.limit stack 7
-.limit locals 2
+.limit stack 1
+.limit locals 1
 .end method
 
 .method public <init>()V

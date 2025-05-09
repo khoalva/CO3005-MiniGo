@@ -1,22 +1,31 @@
 .source MiniGoClass.java
 .class public MiniGoClass
 .super java.lang.Object
-.field static final a I
-.field static final b I
 
 .method public static main([Ljava/lang/String;)V
 Label0:
 .var 0 is args [Ljava/lang/String; from Label0 to Label1
 Label2:
-	getstatic MiniGoClass/a I
-	getstatic MiniGoClass/b I
-	iadd
-	invokestatic io/putInt(I)V
+	new PPL3
+	dup
+	invokespecial PPL3/<init>()V
+	dup
+	bipush 10
+	putfield PPL3/number I
+	new PPL3
+	invokespecial PPL3/<init>()V
+.var 1 is a LPPL3; from Label2 to Label3
+	astore_1
+	aload_1
+	getfield PPL3/number I
+	invokestatic io/putIntLn(I)V
+	aload_1
+	invokevirtual PPL3/study()V
 Label3:
 Label1:
 	return
-.limit stack 2
-.limit locals 1
+.limit stack 4
+.limit locals 2
 .end method
 
 .method public <init>()V
@@ -32,14 +41,8 @@ Label1:
 
 .method public static <clinit>()V
 Label0:
-	iconst_5
-	iconst_5
-	iadd
-	putstatic MiniGoClass/a I
-	bipush 10
-	putstatic MiniGoClass/b I
 Label1:
 	return
-.limit stack 4
+.limit stack 0
 .limit locals 0
 .end method

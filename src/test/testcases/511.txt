@@ -1,1 +1,10 @@
-func main() {var a int = 5; var b int = 10; putInt(a - b);};
+
+            func foo(a int) int {return 1;}        
+            func main() {
+                putInt(foo(foo(1)))
+                
+                foo(1)
+                putIntLn(foo(1))
+            }
+        
+        

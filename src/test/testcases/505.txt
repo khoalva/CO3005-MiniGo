@@ -1,1 +1,10 @@
-Program([FuncDecl(main,[],VoidType,Block([VarDecl(a,IntType,IntLiteral(500)),FuncCall(putInt,[Id(a)])]))])
+
+            func foo() int {return 1;}
+            var a = 2;
+            func main() {
+                putInt(a)
+                a := foo()
+                putInt(a)
+            }
+
+        

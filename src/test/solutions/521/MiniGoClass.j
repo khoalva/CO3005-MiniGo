@@ -6,38 +6,67 @@
 Label0:
 .var 0 is args [Ljava/lang/String; from Label0 to Label1
 Label2:
+	iconst_2
+	anewarray [Ljava/lang/String;
+	dup
+	iconst_0
+	iconst_3
+	anewarray java/lang/String
+	dup
+	iconst_0
+	ldc ""
+	aastore
+	dup
 	iconst_1
-.var 1 is a Z from Label2 to Label3
-	istore_1
-	iconst_0
-.var 2 is b Z from Label2 to Label3
-	istore_2
-	iconst_0
-.var 3 is c Z from Label2 to Label3
-	istore_3
-	iload_1
-	ifle Label4
-	iload_2
-	ifle Label4
+	ldc ""
+	aastore
+	dup
+	iconst_2
+	ldc ""
+	aastore
+	aastore
+	dup
 	iconst_1
-	goto Label5
-Label4:
+	iconst_3
+	anewarray java/lang/String
+	dup
 	iconst_0
-Label5:
-	ifle Label6
-	iload_3
-	ifle Label6
+	ldc ""
+	aastore
+	dup
 	iconst_1
-	goto Label7
-Label6:
+	ldc ""
+	aastore
+	dup
+	iconst_2
+	ldc ""
+	aastore
+	aastore
+.var 1 is a [[Ljava/lang/String; from Label2 to Label3
+	astore_1
+	aload_1
 	iconst_0
-Label7:
-	invokestatic io/putBool(Z)V
+	aaload
+	iconst_0
+	ldc "VOTIEN"
+	aastore
+	aload_1
+	iconst_0
+	aaload
+	iconst_0
+	aaload
+	aload_1
+	iconst_0
+	aaload
+	iconst_1
+	aaload
+	invokevirtual java.lang.String/concat(Ljava/lang/String;)Ljava/lang/String;
+	invokestatic io/putString(Ljava/lang/String;)V
 Label3:
 Label1:
 	return
-.limit stack 3
-.limit locals 4
+.limit stack 13
+.limit locals 2
 .end method
 
 .method public <init>()V

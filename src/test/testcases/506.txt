@@ -1,1 +1,10 @@
-Program([VarDecl(a,IntType,IntLiteral(5000)),FuncDecl(main,[],VoidType,Block([FuncCall(putInt,[Id(a)])]))])
+
+func foo(a int, c int) {
+    var b = a + c;
+    putInt(b)
+}
+func main() {
+    foo(2, 3)
+}
+func foo1() int {return 1;}
+        

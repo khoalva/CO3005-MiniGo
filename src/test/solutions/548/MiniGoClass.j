@@ -6,16 +6,31 @@
 Label0:
 .var 0 is args [Ljava/lang/String; from Label0 to Label1
 Label2:
-.var 1 is a I from Label2 to Label3
-	iconst_5
-	istore_1
-	iload_1
-	invokestatic io/putInt(I)V
+	new PPL3
+	dup
+	invokespecial PPL3/<init>()V
+	dup
+	iconst_1
+	putfield PPL3/number I
+	new PPL3
+	invokespecial PPL3/<init>()V
+.var 1 is a LPPL3; from Label2 to Label3
+	astore_1
+	aload_1
+	new Study
+	invokespecial Study/<init>()V
+.var 2 is b LStudy; from Label2 to Label3
+	astore_2
+	aload_1
+	new Play
+	invokespecial Play/<init>()V
+.var 3 is c LPlay; from Label2 to Label3
+	astore_3
 Label3:
 Label1:
 	return
-.limit stack 2
-.limit locals 2
+.limit stack 4
+.limit locals 4
 .end method
 
 .method public <init>()V

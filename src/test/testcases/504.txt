@@ -1,1 +1,10 @@
-Program([FuncDecl(main,[],VoidType,Block([FuncCall(putInt,[IntLiteral(25)])]))])
+
+        func foo() int {return 6;}
+        var c = foo();
+        var a = 1 + 2;
+        func main() {      
+            putIntLn(a);
+            putIntLn(c);
+            
+        
+        }

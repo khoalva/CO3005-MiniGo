@@ -1,11 +1,13 @@
 
-        func foo1() int{
-            return 5;
+func main() {
+    var i = 0;
+    for i < 5 {
+        i += 1;
+        if (i % 2 == 0) {
+            continue;
         }
-        func foo2() int{
-            return foo1();
-        }
-        func main() {
-            var a int = foo2();
-            putInt(a);
-        };
+        putInt(i);
+    }
+    putInt(i);
+}
+        

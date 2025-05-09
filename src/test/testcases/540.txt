@@ -1,11 +1,11 @@
 
-        func main() {
-            var a int = 0;
-            for a := 0; a < 5; a += 1 {
-                if a == 3 {
-                    continue;
-                }
-                putInt(a);
+            type Course interface {study();}
+            type PPL3 struct {number int;}
+            func (p PPL3) study() {putInt(p.number);}
+
+            func main(){
+                var a PPL3 = PPL3 {number: 10}
+                putIntLn(a.number)
+                a.study()
             }
-            putInt(a);
-        };
+        
